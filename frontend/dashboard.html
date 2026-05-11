@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PayBill Dashboard</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #667eea, #4ecdc4);
+      min-height: 100vh;
+    }
+
+    /* Container */
+    .container {
+      max-width: 1200px;
+      margin: auto;
+      padding: 20px;
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: white;
+      margin-bottom: 20px;
+    }
+
+    .header h1 {
+      font-size: 28px;
+    }
+
+    .logout-btn {
+      background: red;
+      border: none;
+      padding: 8px 15px;
+      color: white;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    /* Cards */
+    .card {
+      background: rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(12px);
+      border-radius: 15px;
+      padding: 20px;
+      color: white;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Grid */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+    }
+
+    /* Balance Card */
+    .balance {
+      font-size: 32px;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+
+    /* Buttons */
+    .action-btn {
+      width: 100%;
+      margin-top: 10px;
+      padding: 12px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      background: white;
+      color: #333;
+      font-weight: 600;
+      transition: 0.3s;
+    }
+
+    .action-btn:hover {
+      transform: scale(1.05);
+      background: #f1f1f1;
+    }
+
+    /* Activity */
+    .activity {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 10px;
+      border-radius: 10px;
+      margin-top: 10px;
+    }
+
+    /* Notification */
+    .note {
+      background: rgba(255, 255, 255, 0.15);
+      padding: 10px;
+      border-radius: 10px;
+      margin-bottom: 10px;
+    }
+
+    /* Animations */
+    .card:hover {
+      transform: translateY(-5px);
+      transition: 0.3s;
+    }
+  </style>
+
+</head>
+
+<body>
+
+  <div class="container">
+
+    <!-- HEADER -->
+    <div class="header">
+      <h1>🚀 PayBill Dashboard</h1>
+      <button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
+
+    <!-- BALANCE -->
+    <div class="card">
+      <h2>Welcome Back 👋</h2>
+      <p>Your Wallet Balance</p>
+      <div class="balance" id="balance">₹0</div>
+    </div>
+
+    <br>
+
+    <!-- GRID -->
+    <div class="grid">
+
+      <!-- QUICK ACTION -->
+      <div class="card">
+        <h3>⚡ Quick Actions</h3>
+
+        <button class="action-btn" onclick="go('payment.html')">💳 Payment</button>
+        <button class="action-btn" onclick="go('wallet.html')">💰 Wallet</button>
+        <button class="action-btn" onclick="go('recharge.html')">📱 Recharge</button>
+        <button class="action-btn" onclick="go('scanpay.html')">📷 Scan & Pay</button>
+        <button class="action-btn" onclick="go('bank.html')">🏦 Bank Transfer</button>
+        <button class="action-btn" onclick="go('billing.html')">📄 Bills</button>
+
+      </div>
+
+      <!-- RECENT ACTIVITY -->
+      <div class="card">
+        <h3>📊 Recent Activity</h3>
+        <div id="activity"></div>
+      </div>
+
+      <!-- NOTIFICATIONS -->
+      <div class="card">
+        <h3>🔔 Notifications</h3>
+        <div id="notifications"></div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <script>
+
+    const API = "http://localhost:5000";
+
+    /* Navigation */
+    function go(page) {
+      window.location = page;
+    }
+
+    /* Logout */
+    function logout() {
+      localStorage.removeItem("currentUser");
+      window.location = "login.html";
+    }
+
+    /* Load User */
+    async function loadUser() {
+      const user = JSON.parse(localStorage.getItem("currentUser"));
+
+      if (!user) {
+        window.location = "login.html";
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API}/user/${user.mobile}`);
+        const data = await res.json();
+
+        document.getElementById("balance").innerText = "₹" + data.balance;
+
+      } catch {
+        document.getElementById("balance").innerText = "₹ Error";
+      }
+    }
+
+    /* Load Activity */
+    function loadActivity() {
+      const list = JSON.parse(localStorage.getItem("transactions")) || [];
+
+      let html = "";
+
+      list.slice(-5).reverse().forEach(t => {
+        html += `
+      <div class="activity">
+        ${t.type} ₹${t.amount}
+      </div>
+    `;
+      });
+
+      document.getElementById("activity").innerHTML =
+        html || "<p>No activity</p>";
+    }
+
+    /* Notifications */
+    function loadNotifications() {
+      const notes = JSON.parse(localStorage.getItem("notifications")) || [];
+
+      let html = "";
+
+      notes.forEach(n => {
+        html += `<div class="note">🔔 ${n}</div>`;
+      });
+
+      document.getElementById("notifications").innerHTML =
+        html || "<p>No notifications</p>";
+    }
+
+    /* INIT */
+    loadUser();
+    loadActivity();
+    loadNotifications();
+
+  </script>
+
+</body>
+
+</html>

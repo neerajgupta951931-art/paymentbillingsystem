@@ -1,0 +1,1134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scan & Pay - PayBill</title>
+    <link rel="stylesheet" href="styles/styles.css">
+<link rel="stylesheet" href="styles/billing-bg.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📷 Scan & Pay</h1>
+            <a href="dashboard.html">← Dashboard</a>
+        </div>
+
+        <div class="card mb-30">
+            <h3 class="text-center mb-20">Camera Preview</h3>
+            <div class="canvas-container">
+                <canvas id="cameraCanvas" width="500" height="300"></canvas>
+            </div>
+            <div style="text-align: center; margin-top: 20px;">
+                <button class="btn-primary" onclick="startScan()">📷 Start Scanning</button>
+                <button class="btn-secondary" onclick="stopScan()">⏹️ Stop</button>
+            </div>
+        </div>
+
+        <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 30px;">
+            <div class="card">
+                <h3 class="mb-20">Scan Result</h3>
+                <div id="scanResult" style="background: rgba(102, 126, 234, 0.1); padding: 20px; border-radius: 10px; display: none;">
+                    <p style="margin: 0; color: #666; font-size: 12px;">UPI ID</p>
+                    <p style="margin: 5px 0 10px 0; font-weight: bold; font-size: 16px;" id="scannedUPI">-</p>
+                    
+                    <p style="margin: 0; color: #666; font-size: 12px;">Amount</p>
+                    <p style="margin: 5px 0 0 0; font-weight: bold; font-size: 16px;" id="scannedAmount">-</p>
+                </div>
+                <p id="scanStatus" class="text-center mt-20">Ready to scan</p>
+            </div>
+
+            <div class="card">
+                <h3 class="mb-20">Quick Actions</h3>
+                <div class="flex-col" style="gap: 10px;">
+                    <button class="btn-secondary" onclick="scanQR()">📲 Scan QR Code</button>
+                    <button class="btn-secondary" onclick="scanNCPI()">🔗 Scan NCPI</button>
+                    <button class="btn-secondary" onclick="enterManually()">✍️ Enter Manually</button>
+                    <button class="btn-secondary" onclick="useFavorite()">⭐ Use Favorite</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-30">
+            <h3 class="mb-20">Enter Payment Details</h3>
+            <form class="flex-col" style="gap: 15px;">
+                <div>
+                    <label for="payUPI">UPI ID / Mobile</label>
+                    <input type="text" id="payUPI" placeholder="username@paybill or 10-digit number">
+                </div>
+                <div>
+                    <label for="payAmount">Amount</label>
+                    <input type="number" id="payAmount" placeholder="Enter amount">
+                </div>
+                <div>
+                    <label for="payName">Recipient Name</label>
+                    <input type="text" id="payName" placeholder="Name of recipient">
+                </div>
+                <button type="button" class="btn-primary" onclick="confirmPayment()">💸 Pay Now</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <h3 class="mb-20">📜 Scan History</h3>
+            <div class="flex-col" style="gap: 10px;">
+                <div style="display: flex; justify-content: space-between; padding: 12px; background: #f5f5f5; border-radius: 8px;">
+                    <div>
+                        <p style="margin: 0; font-weight: bold;">john@paybill</p>
+                        <small style="color: #666;">2 hours ago</small>
+                    </div>
+                    <p style="margin: 0; font-weight: bold;">₹500</p>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 12px; background: #f5f5f5; border-radius: 8px;">
+                    <div>
+                        <p style="margin: 0; font-weight: bold;">raj@upi</p>
+                        <small style="color: #666;">1 day ago</small>
+                    </div>
+                    <p style="margin: 0; font-weight: bold;">₹1,000</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        let isScanning = false;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            drawCameraPreview();
+        });
+
+        function drawCameraPreview() {
+            const canvas = document.getElementById('cameraCanvas');
+            const ctx = canvas.getContext('2d');
+
+            // Background
+            const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+            gradient.addColorStop(0, 'rgba(102, 126, 234, 0.1)');
+            gradient.addColorStop(1, 'rgba(78, 205, 196, 0.1)');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Camera frame
+            ctx.strokeStyle = '#667eea';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(50, 50, 400, 200);
+
+            // Corner markers
+            drawCornerMarker(ctx, 50, 50);
+            drawCornerMarker(ctx, 450, 50);
+            drawCornerMarker(ctx, 50, 250);
+            drawCornerMarker(ctx, 450, 250);
+
+            // Center text
+            ctx.fillStyle = '#667eea';
+            ctx.font = 'bold 16px Inter';
+            ctx.textAlign = 'center';
+            ctx.fillText('📷 Point camera at QR code', canvas.width / 2, 150);
+
+            // Scanning line animation
+            if (isScanning) {
+                const line = (Date.now() % 2000) / 2000 * 200;
+                ctx.strokeStyle = '#4ecdc4';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(50, 50 + line);
+                ctx.lineTo(450, 50 + line);
+                ctx.stroke();
+            }
+        }
+
+        function drawCornerMarker(ctx, x, y) {
+            ctx.strokeStyle = '#667eea';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(x - 20, y);
+            ctx.lineTo(x - 5, y);
+            ctx.moveTo(x, y - 20);
+            ctx.lineTo(x, y - 5);
+            ctx.stroke();
+        }
+
+        function animateScanning() {
+            drawCameraPreview();
+            if (isScanning) {
+                setTimeout(animateScanning, 50);
+            }
+        }
+
+        function startScan() {
+            isScanning = true;
+            document.getElementById('scanStatus').textContent = 'Scanning...';
+            animateScanning();
+            setTimeout(() => {
+                if (isScanning) {
+                    document.getElementById('scanStatus').textContent = '✓ QR Code Detected!';
+                    document.getElementById('scanResult').style.display = 'block';
+                    document.getElementById('scannedUPI').textContent = 'john@paybill';
+                    document.getElementById('scannedAmount').textContent = '₹500';
+                }
+            }, 3000);
+        }
+
+        function stopScan() {
+            isScanning = false;
+            document.getElementById('scanStatus').textContent = 'Scan stopped';
+            drawCameraPreview();
+        }
+
+        function scanQR() {
+            alert('Opening QR Scanner...');
+        }
+
+        function scanNCPI() {
+            alert('NCPI scanning coming soon!');
+        }
+
+        function enterManually() {
+            const upi = prompt('Enter UPI ID:');
+            if (upi) {
+                document.getElementById('payUPI').value = upi;
+            }
+        }
+
+        function useFavorite() {
+            document.getElementById('payUPI').value = 'john@paybill';
+            document.getElementById('payAmount').value = '500';
+            document.getElementById('payName').value = 'John Doe';
+        }
+
+        function confirmPayment() {
+            const upi = document.getElementById('payUPI').value;
+            const amount = document.getElementById('payAmount').value;
+            if (upi && amount) {
+                alert(`Payment of ₹${amount} to ${upi}?`);
+            } else {
+                alert('Please fill all fields');
+            }
+        }
+    </script>
+</body>
+</html>
+<html>
+
+<head>
+
+<title>Scan & Pay</title>
+
+<style>
+
+body{
+margin:0;
+font-family:Arial;
+background:linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+color:white;
+min-height:100vh;
+display:flex;
+align-items:center;
+justify-content:center;
+padding:20px;
+}
+
+.container{
+background:rgba(255,255,255,0.1);
+backdrop-filter:blur(15px);
+border-radius:25px;
+padding:40px;
+width:100%;
+max-width:600px;
+box-shadow:0 20px 40px rgba(0,0,0,0.3);
+border:1px solid rgba(255,255,255,0.2);
+position:relative;
+}
+
+h2{
+color:#fff;
+margin-bottom:40px;
+font-size:32px;
+text-shadow:0 2px 4px rgba(0,0,0,0.3);
+display:flex;
+align-items:center;
+justify-content:center;
+gap:15px;
+}
+
+.camera-section{
+text-align:center;
+}
+
+.camera-container{
+position:relative;
+width:100%;
+max-width:350px;
+margin:0 auto 20px;
+border-radius:15px;
+overflow:hidden;
+background:#000;
+}
+
+#cameraVideo{
+width:100%;
+height:280px;
+object-fit:cover;
+border-radius:15px;
+}
+
+.camera-overlay{
+position:absolute;
+top:0;
+left:0;
+right:0;
+bottom:0;
+border:3px solid #00d4ff;
+border-radius:15px;
+pointer-events:none;
+box-shadow:inset 0 0 20px rgba(0,212,255,0.3);
+}
+
+.camera-overlay::before{
+content:'';
+position:absolute;
+top:50%;
+left:50%;
+transform:translate(-50%, -50%);
+width:180px;
+height:180px;
+border:2px solid rgba(0,212,255,0.6);
+border-radius:50%;
+animation:pulse 2s infinite;
+}
+
+@keyframes pulse {
+0% { transform:translate(-50%, -50%) scale(1); opacity:1; }
+50% { transform:translate(-50%, -50%) scale(1.05); opacity:0.8; }
+100% { transform:translate(-50%, -50%) scale(1); opacity:1; }
+}
+
+.scan-result{
+background:linear-gradient(45deg, #4CAF50, #45a049);
+color:white;
+padding:20px;
+border-radius:15px;
+margin:20px 0;
+display:none;
+box-shadow:0 10px 30px rgba(76,175,80,0.3);
+}
+
+.scan-result h4{
+margin:0 0 10px 0;
+font-size:18px;
+}
+
+.scan-result p{
+margin:5px 0;
+opacity:0.9;
+}
+
+/* Payment Steps Styles */
+.payment-steps{
+background:rgba(255,255,255,0.1);
+backdrop-filter:blur(10px);
+border-radius:20px;
+padding:30px;
+margin-top:20px;
+border:1px solid rgba(255,255,255,0.2);
+display:none;
+}
+
+.step-indicator{
+display:flex;
+align-items:center;
+justify-content:center;
+margin-bottom:30px;
+}
+
+.step{
+width:45px;
+height:45px;
+border-radius:50%;
+background:rgba(255,255,255,0.2);
+color:#00d4ff;
+display:flex;
+align-items:center;
+justify-content:center;
+font-weight:bold;
+font-size:18px;
+transition:all 0.3s ease;
+position:relative;
+}
+
+.step.active{
+background:linear-gradient(45deg, #00d4ff, #0099cc);
+color:white;
+box-shadow:0 0 25px rgba(0,212,255,0.6);
+transform:scale(1.1);
+}
+
+.step.completed{
+background:linear-gradient(45deg, #4CAF50, #45a049);
+color:white;
+}
+
+.step.completed::after{
+content:'✓';
+position:absolute;
+top:50%;
+left:50%;
+transform:translate(-50%, -50%);
+font-size:20px;
+}
+
+.step-line{
+width:70px;
+height:3px;
+background:rgba(255,255,255,0.2);
+margin:0 15px;
+position:relative;
+}
+
+.step-line.active{
+background:linear-gradient(90deg, #00d4ff, #0099cc);
+}
+
+.step-content{
+min-height:350px;
+}
+
+.step-section{
+display:none;
+animation:fadeIn 0.5s ease;
+}
+
+.step-section.active{
+display:block;
+}
+
+@keyframes fadeIn {
+from { opacity:0; transform:translateY(20px); }
+to { opacity:1; transform:translateY(0); }
+}
+
+.step-section h3{
+color:#ffd700;
+text-align:center;
+margin-bottom:25px;
+font-size:26px;
+text-shadow:0 2px 4px rgba(0,0,0,0.3);
+}
+
+.amount-input-group{
+text-align:center;
+margin-bottom:30px;
+}
+
+.amount-input-group input{
+width:220px;
+padding:18px;
+border:none;
+border-radius:15px;
+background:rgba(255,255,255,0.2);
+color:white;
+font-size:20px;
+text-align:center;
+margin-bottom:20px;
+font-weight:bold;
+}
+
+.amount-input-group input::placeholder{
+color:rgba(255,255,255,0.7);
+}
+
+.amount-input-group input:focus{
+outline:none;
+background:rgba(255,255,255,0.3);
+box-shadow:0 0 0 3px rgba(0,212,255,0.5);
+}
+
+.quick-amounts{
+display:flex;
+gap:12px;
+justify-content:center;
+flex-wrap:wrap;
+margin-bottom:20px;
+}
+
+.quick-btn{
+background:rgba(255,255,255,0.1);
+color:#00d4ff;
+border:2px solid rgba(0,212,255,0.3);
+padding:12px 18px;
+border-radius:12px;
+cursor:pointer;
+transition:all 0.3s ease;
+font-weight:bold;
+font-size:16px;
+}
+
+.quick-btn:hover{
+background:rgba(0,212,255,0.2);
+transform:translateY(-3px);
+border-color:#00d4ff;
+box-shadow:0 8px 20px rgba(0,212,255,0.3);
+}
+
+.quick-btn.active{
+background:linear-gradient(45deg, #00d4ff, #0099cc);
+color:white;
+border-color:#00d4ff;
+}
+
+.pin-input-group{
+text-align:center;
+margin-bottom:30px;
+}
+
+.pin-display{
+font-size:36px;
+color:#ffd700;
+margin:25px 0;
+font-family:monospace;
+letter-spacing:12px;
+text-shadow:0 2px 4px rgba(0,0,0,0.3);
+}
+
+.pin-keypad{
+display:grid;
+grid-template-columns:repeat(3, 1fr);
+gap:18px;
+max-width:280px;
+margin:0 auto;
+}
+
+.key-btn{
+background:rgba(255,255,255,0.1);
+color:white;
+border:2px solid rgba(255,255,255,0.2);
+padding:22px;
+border-radius:15px;
+cursor:pointer;
+font-size:22px;
+font-weight:bold;
+transition:all 0.3s ease;
+}
+
+.key-btn:hover{
+background:rgba(255,255,255,0.2);
+transform:translateY(-3px);
+box-shadow:0 8px 20px rgba(0,0,0,0.2);
+}
+
+.key-btn.clear{
+background:linear-gradient(45deg, #ff6b6b, #ffa500);
+color:white;
+border-color:#ff6b6b;
+}
+
+.key-btn.confirm{
+background:linear-gradient(45deg, #4CAF50, #45a049);
+color:white;
+border-color:#4CAF50;
+grid-column:span 3;
+font-size:18px;
+}
+
+.payment-summary{
+background:rgba(255,255,255,0.1);
+border-radius:18px;
+padding:25px;
+margin-bottom:30px;
+border:1px solid rgba(255,255,255,0.2);
+}
+
+.summary-item{
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:12px 0;
+border-bottom:1px solid rgba(255,255,255,0.1);
+}
+
+.summary-item:last-child{
+border-bottom:none;
+}
+
+.summary-item span:first-child{
+color:#00d4ff;
+font-weight:bold;
+font-size:16px;
+}
+
+.summary-item span:last-child{
+color:#ffd700;
+font-weight:600;
+font-size:16px;
+}
+
+.action-buttons{
+display:flex;
+gap:25px;
+justify-content:center;
+}
+
+.back-btn-step{
+background:rgba(255,255,255,0.2);
+color:#00d4ff;
+border:2px solid rgba(0,212,255,0.3);
+padding:16px 35px;
+border-radius:15px;
+cursor:pointer;
+font-weight:bold;
+font-size:16px;
+transition:all 0.3s ease;
+}
+
+.back-btn-step:hover{
+background:rgba(0,212,255,0.2);
+transform:translateY(-3px);
+border-color:#00d4ff;
+}
+
+.pay-btn{
+background:linear-gradient(45deg, #00d4ff, #0099cc);
+color:white;
+border:none;
+padding:16px 45px;
+border-radius:15px;
+cursor:pointer;
+font-weight:bold;
+font-size:18px;
+transition:all 0.3s ease;
+box-shadow:0 8px 25px rgba(0,212,255,0.3);
+}
+
+.pay-btn:hover{
+transform:translateY(-3px);
+box-shadow:0 12px 30px rgba(0,212,255,0.4);
+}
+
+.pay-btn:disabled{
+background:gray;
+cursor:not-allowed;
+transform:none;
+box-shadow:none;
+}
+
+.next-btn{
+background:linear-gradient(45deg, #00d4ff, #0099cc);
+color:white;
+border:none;
+padding:16px 35px;
+border-radius:15px;
+cursor:pointer;
+font-weight:bold;
+font-size:16px;
+transition:all 0.3s ease;
+margin-top:25px;
+box-shadow:0 8px 20px rgba(0,212,255,0.3);
+}
+
+.next-btn:hover{
+transform:translateY(-3px);
+box-shadow:0 12px 25px rgba(0,212,255,0.4);
+}
+
+.scan-btn{
+background:linear-gradient(45deg, #ff6b6b, #ffa500);
+color:white;
+border:none;
+padding:16px 30px;
+border-radius:15px;
+cursor:pointer;
+font-weight:bold;
+font-size:16px;
+margin:20px 0;
+transition:all 0.3s ease;
+box-shadow:0 8px 20px rgba(255,107,107,0.3);
+}
+
+.scan-btn:hover{
+transform:translateY(-3px);
+box-shadow:0 12px 25px rgba(255,107,107,0.4);
+}
+
+.back-btn{
+position:absolute;
+top:20px;
+left:20px;
+background:rgba(255,255,255,0.2);
+color:white;
+border:none;
+padding:12px 18px;
+border-radius:12px;
+cursor:pointer;
+backdrop-filter:blur(5px);
+transition:all 0.3s ease;
+font-size:14px;
+z-index:1000;
+}
+
+.back-btn:hover{
+background:rgba(255,255,255,0.3);
+transform:scale(1.05);
+}
+
+.loading{
+display:inline-block;
+width:20px;
+height:20px;
+border:2px solid rgba(255,255,255,0.3);
+border-radius:50%;
+border-top-color:#00d4ff;
+animation:spin 1s ease-in-out infinite;
+margin-right:10px;
+}
+
+@keyframes spin {
+to { transform:rotate(360deg); }
+}
+
+@media (max-width:768px){
+.container{
+padding:25px;
+max-width:95%;
+}
+
+.camera-container{
+max-width:300px;
+}
+
+#cameraVideo{
+height:240px;
+}
+
+.quick-amounts{
+gap:8px;
+}
+
+.quick-btn{
+padding:10px 14px;
+font-size:14px;
+}
+
+.pin-keypad{
+max-width:240px;
+gap:12px;
+}
+
+.key-btn{
+padding:18px;
+font-size:18px;
+}
+}
+
+</style>
+
+<link rel="stylesheet" href="styles/billing-bg.css">
+</head>
+
+<body>
+
+<button class="back-btn" onclick="goBack()">← Back</button>
+
+<div class="container">
+
+<h2>📱 Scan & Pay</h2>
+
+<div class="camera-section">
+
+<div class="camera-container">
+<video id="cameraVideo" autoplay playsinline></video>
+<div class="camera-overlay"></div>
+</div>
+
+<div class="scan-result" id="scanResult">
+<h4>✅ QR Code Detected!</h4>
+<p><strong>Recipient:</strong> <span id="scannedRecipient">Unknown</span></p>
+<p><strong>UPI ID:</strong> <span id="scannedUPI">unknown@upi</span></p>
+<p style="color:#ffeb3b;margin-top:15px;">Proceeding to payment...</p>
+</div>
+
+<button class="scan-btn" onclick="startScanning()" id="startScanBtn">
+📱 Start Scanning
+</button>
+
+<p style="color:#00d4ff;margin:15px 0;opacity:0.8;">
+Position QR code within the scanning frame
+</p>
+
+</div>
+
+<!-- Payment Steps -->
+<div class="payment-steps" id="paymentSteps">
+
+<div class="step-indicator">
+<div class="step active" id="step1">1</div>
+<div class="step-line" id="line1"></div>
+<div class="step" id="step2">2</div>
+<div class="step-line" id="line2"></div>
+<div class="step" id="step3">3</div>
+</div>
+
+<div class="step-content">
+
+<!-- Step 1: Enter Amount -->
+<div class="step-section active" id="amountStep">
+<h3>💰 Enter Amount</h3>
+<div class="amount-input-group">
+<input type="number" id="paymentAmount" placeholder="Enter amount" min="1" step="0.01" oninput="validateAmount()">
+<div class="quick-amounts">
+<button class="quick-btn" onclick="setAmount(100)">₹100</button>
+<button class="quick-btn" onclick="setAmount(500)">₹500</button>
+<button class="quick-btn" onclick="setAmount(1000)">₹1000</button>
+<button class="quick-btn" onclick="setAmount(2000)">₹2000</button>
+</div>
+</div>
+<button class="next-btn" onclick="nextStep(1)" id="amountNextBtn" disabled>Continue →</button>
+</div>
+
+<!-- Step 2: Enter PIN -->
+<div class="step-section" id="pinStep">
+<h3>🔐 Enter PIN</h3>
+<div class="pin-input-group">
+<div class="pin-display" id="pinDisplay">• • • •</div>
+<p style="color:#00d4ff;margin:10px 0;">Enter your 4-digit security PIN</p>
+</div>
+<div class="pin-keypad">
+<button class="key-btn" onclick="addPinDigit(1)">1</button>
+<button class="key-btn" onclick="addPinDigit(2)">2</button>
+<button class="key-btn" onclick="addPinDigit(3)">3</button>
+<button class="key-btn" onclick="addPinDigit(4)">4</button>
+<button class="key-btn" onclick="addPinDigit(5)">5</button>
+<button class="key-btn" onclick="addPinDigit(6)">6</button>
+<button class="key-btn" onclick="addPinDigit(7)">7</button>
+<button class="key-btn" onclick="addPinDigit(8)">8</button>
+<button class="key-btn" onclick="addPinDigit(9)">9</button>
+<button class="key-btn clear" onclick="clearPin()">⌫</button>
+<button class="key-btn" onclick="addPinDigit(0)">0</button>
+<button class="key-btn confirm" onclick="nextStep(2)">✓ Confirm</button>
+</div>
+</div>
+
+<!-- Step 3: Confirm Payment -->
+<div class="step-section" id="confirmStep">
+<h3>✅ Confirm Payment</h3>
+<div class="payment-summary">
+<div class="summary-item">
+<span>Recipient:</span>
+<span id="confirmRecipient">Unknown</span>
+</div>
+<div class="summary-item">
+<span>Amount:</span>
+<span id="confirmAmount">₹0</span>
+</div>
+<div class="summary-item">
+<span>UPI ID:</span>
+<span id="confirmUPI">unknown@upi</span>
+</div>
+<div class="summary-item">
+<span>Transaction Fee:</span>
+<span style="color:#4CAF50;">₹0 (Free)</span>
+</div>
+</div>
+<div class="action-buttons">
+<button class="back-btn-step" onclick="prevStep()">← Back</button>
+<button class="pay-btn" onclick="processPayment()" id="payBtn">
+<span class="loading" id="payLoading" style="display:none;"></span>
+Pay Now
+</button>
+</div>
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+<script src="js/api.js"></script>
+
+<script>
+
+let scanning = false;
+let stream = null;
+let scanInterval = null;
+let currentStep = 0;
+let scannedData = null;
+let paymentAmount = 0;
+let paymentPIN = '';
+
+function goBack(){
+if(scanning){
+stopScanning();
+}
+if(currentStep > 0){
+resetPaymentFlow();
+} else {
+window.location = 'dashboard.html';
+}
+}
+
+async function startScanning(){
+try {
+const video = document.getElementById('cameraVideo');
+const startBtn = document.getElementById('startScanBtn');
+
+startBtn.innerHTML = '🔄 Initializing Camera...';
+startBtn.disabled = true;
+
+stream = await navigator.mediaDevices.getUserMedia({
+video: {
+facingMode: 'environment',
+width: { ideal: 1280 },
+height: { ideal: 720 }
+}
+});
+
+video.srcObject = stream;
+scanning = true;
+
+startBtn.style.display = 'none';
+
+// Start scanning for QR codes
+scanInterval = setInterval(() => {
+if(!scanning) return;
+
+const canvas = document.createElement('canvas');
+const ctx = canvas.getContext('2d');
+canvas.width = video.videoWidth;
+canvas.height = video.videoHeight;
+
+if(canvas.width > 0 && canvas.height > 0){
+ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+const code = jsQR(imageData.data, imageData.width, imageData.height);
+
+if(code){
+handleScannedCode(code.data);
+}
+}
+}, 300);
+
+} catch(error){
+alert('Camera access denied or not available. Please allow camera permissions and try again.');
+console.error('Camera error:', error);
+document.getElementById('startScanBtn').innerHTML = '📱 Start Scanning';
+document.getElementById('startScanBtn').disabled = false;
+}
+}
+
+function stopScanning(){
+scanning = false;
+if(stream){
+stream.getTracks().forEach(track => track.stop());
+}
+if(scanInterval){
+clearInterval(scanInterval);
+}
+document.getElementById('cameraVideo').srcObject = null;
+document.getElementById('startScanBtn').style.display = 'inline-block';
+document.getElementById('startScanBtn').innerHTML = '📱 Start Scanning';
+document.getElementById('startScanBtn').disabled = false;
+}
+
+function handleScannedCode(data){
+try {
+// Parse QR code data
+scannedData = JSON.parse(data) || {
+recipient: 'Demo User',
+upi: 'demo@upi',
+amount: null
+};
+
+// Mock QR data for demonstration
+if(!scannedData.recipient){
+scannedData = {
+recipient: 'John Doe',
+upi: 'john@upi',
+amount: null
+};
+}
+
+document.getElementById('scannedRecipient').textContent = scannedData.recipient;
+document.getElementById('scannedUPI').textContent = scannedData.upi;
+document.getElementById('scanResult').style.display = 'block';
+
+stopScanning();
+
+// Start payment flow
+setTimeout(() => {
+startPaymentFlow();
+}, 2000);
+
+} catch(e){
+console.error('QR parsing error:', e);
+alert('Invalid QR code format. Please try scanning again.');
+}
+}
+
+function startPaymentFlow(){
+document.getElementById('scanResult').style.display = 'none';
+document.getElementById('paymentSteps').style.display = 'block';
+currentStep = 1;
+updateStepIndicator();
+
+// Scroll to payment steps
+document.getElementById('paymentSteps').scrollIntoView({ behavior: 'smooth' });
+}
+
+function resetPaymentFlow(){
+document.getElementById('paymentSteps').style.display = 'none';
+document.getElementById('scanResult').style.display = 'none';
+currentStep = 0;
+paymentAmount = 0;
+paymentPIN = '';
+scannedData = null;
+document.getElementById('paymentAmount').value = '';
+document.getElementById('pinDisplay').textContent = '• • • •';
+document.querySelectorAll('.quick-btn').forEach(btn => btn.classList.remove('active'));
+updateStepIndicator();
+}
+
+function updateStepIndicator(){
+document.querySelectorAll('.step').forEach((step, index) => {
+step.classList.remove('active', 'completed');
+if(index + 1 < currentStep){
+step.classList.add('completed');
+} else if(index + 1 === currentStep){
+step.classList.add('active');
+}
+});
+
+document.querySelectorAll('.step-line').forEach((line, index) => {
+line.classList.remove('active');
+if(index + 1 < currentStep){
+line.classList.add('active');
+}
+});
+
+document.querySelectorAll('.step-section').forEach(section => {
+section.classList.remove('active');
+});
+if(currentStep > 0){
+document.getElementById(['amountStep', 'pinStep', 'confirmStep'][currentStep - 1]).classList.add('active');
+}
+}
+
+function validateAmount(){
+const amount = parseFloat(document.getElementById('paymentAmount').value);
+const nextBtn = document.getElementById('amountNextBtn');
+nextBtn.disabled = !amount || amount <= 0;
+}
+
+function nextStep(fromStep){
+if(fromStep === 1){
+const amount = parseFloat(document.getElementById('paymentAmount').value);
+if(!amount || amount <= 0){
+alert('Please enter a valid amount');
+return;
+}
+paymentAmount = amount;
+currentStep = 2;
+} else if(fromStep === 2){
+if(paymentPIN.length !== 4){
+alert('Please enter a complete 4-digit PIN');
+return;
+}
+currentStep = 3;
+
+// Update confirmation details
+document.getElementById('confirmRecipient').textContent = scannedData.recipient;
+document.getElementById('confirmAmount').textContent = '₹' + paymentAmount.toLocaleString();
+document.getElementById('confirmUPI').textContent = scannedData.upi;
+}
+
+updateStepIndicator();
+}
+
+function prevStep(){
+if(currentStep > 1){
+currentStep--;
+updateStepIndicator();
+}
+}
+
+function setAmount(amount){
+document.getElementById('paymentAmount').value = amount;
+document.querySelectorAll('.quick-btn').forEach(btn => btn.classList.remove('active'));
+event.target.classList.add('active');
+validateAmount();
+}
+
+function addPinDigit(digit){
+if(paymentPIN.length < 4){
+paymentPIN += digit;
+updatePinDisplay();
+}
+}
+
+function clearPin(){
+paymentPIN = paymentPIN.slice(0, -1);
+updatePinDisplay();
+}
+
+function updatePinDisplay(){
+const display = document.getElementById('pinDisplay');
+const dots = '•'.repeat(paymentPIN.length) + '◦'.repeat(4 - paymentPIN.length);
+display.textContent = dots.split('').join(' ');
+}
+
+function addNotification(msg) {
+  let notes = JSON.parse(localStorage.getItem("notifications")) || [];
+  notes.unshift(msg);
+  localStorage.setItem("notifications", JSON.stringify(notes));
+}
+
+async function processPayment() {
+  const user = JSON.parse(localStorage.getItem("currentUser"));
+
+  try {
+    const result = await API.apiCall('/scan-pay', {
+      method: 'POST',
+      body: {
+        senderMobile: user.mobile,
+        receiverUPI: scannedData.upi,
+        amount: paymentAmount
+      }
+    });
+
+    alert(result.data);
+
+    if (result.data.includes("Successful")) {
+      addNotification("Payment of ₹" + paymentAmount + " to " + (scannedData.recipient || scannedData.upi) + " was successful!");
+      
+      localStorage.setItem("receipt", JSON.stringify({
+        amount: paymentAmount,
+        to: scannedData.upi,
+        date: new Date().toLocaleString(),
+        id: "TXN" + Date.now()
+      }));
+      window.location = "receipt.html";
+    }
+
+  } catch (err) {
+    alert("Payment Failed ❌");
+    console.error(err);
+  }
+}
+
+// Stop scanning when page unloads
+window.addEventListener('beforeunload', () => {
+stopScanning();
+resetPaymentFlow();
+});
+
+// Handle back button
+window.addEventListener('popstate', () => {
+goBack();
+});
+
+</script>
+
+</body>
+
+</html>

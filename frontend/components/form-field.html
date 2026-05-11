@@ -1,0 +1,81 @@
+<!-- Reusable Form Field Component -->
+<!-- Usage: Include this file and call createFormField(containerId, fields) -->
+
+<script>
+function createFormField(containerId, fieldConfig) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    const fieldDiv = document.createElement('div');
+
+    // Create label
+    if (fieldConfig.label) {
+        const label = document.createElement('label');
+        label.setAttribute('for', fieldConfig.id);
+        label.textContent = fieldConfig.label;
+        fieldDiv.appendChild(label);
+    }
+
+    // Create input/select/textarea
+    let input;
+    if (fieldConfig.type === 'select') {
+        input = document.createElement('select');
+        if (fieldConfig.options) {
+            fieldConfig.options.forEach(option => {
+                const optionElement = document.createElement('option');
+                optionElement.value = option.value;
+                optionElement.textContent = option.label;
+                input.appendChild(optionElement);
+            });
+        }
+    } else if (fieldConfig.type === 'textarea') {
+        input = document.createElement('textarea');
+        input.rows = fieldConfig.rows || 3;
+    } else {
+        input = document.createElement('input');
+        input.type = fieldConfig.type || 'text';
+    }
+
+    // Set common attributes
+    input.id = fieldConfig.id;
+    input.name = fieldConfig.name || fieldConfig.id;
+    input.placeholder = fieldConfig.placeholder || '';
+    if (fieldConfig.required) input.required = true;
+    if (fieldConfig.value) input.value = fieldConfig.value;
+    if (fieldConfig.min) input.min = fieldConfig.min;
+    if (fieldConfig.max) input.max = fieldConfig.max;
+    if (fieldConfig.pattern) input.pattern = fieldConfig.pattern;
+
+    fieldDiv.appendChild(input);
+    container.appendChild(fieldDiv);
+
+    return input;
+}
+
+function createFormFields(containerId, fields) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    container.innerHTML = ''; // Clear existing content
+
+    fields.forEach(fieldConfig => {
+        createFormField(containerId, fieldConfig);
+    });
+}
+
+// Auto-create form fields if data attributes are present
+document.addEventListener('DOMContentLoaded', function() {
+    const containers = document.querySelectorAll('[data-form-fields]');
+    containers.forEach(container => {
+        const fieldsData = container.getAttribute('data-form-fields');
+        if (fieldsData) {
+            try {
+                const fields = JSON.parse(fieldsData);
+                createFormFields(container.id, fields);
+            } catch (e) {
+                console.error('Invalid form fields data:', e);
+            }
+        }
+    });
+});
+</script>

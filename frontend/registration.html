@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - PayBill</title>
+
+    <link rel="stylesheet" href="styles/styles.css">
+    <link rel="stylesheet" href="styles/billing-bg.css">
+
+    <style>
+        .card {
+            padding: 20px;
+            border-radius: 12px;
+            background: white;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        input {
+            padding: 10px;
+            margin: 8px 0;
+            width: 100%;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .otp-box {
+            display: none;
+            margin-top: 15px;
+        }
+
+        .success {
+            display: none;
+            text-align: center;
+            color: green;
+            font-weight: bold;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <div class="container">
+
+        <div class="header">
+            <h1>📝 Create Account</h1>
+            <p>Secure & Fast Registration</p>
+        </div>
+
+        <!-- CANVAS -->
+        <canvas id="canvas" width="400" height="120"></canvas>
+
+        <div class="card">
+
+            <form id="form">
+
+                <input type="text" id="name" placeholder="Full Name" required>
+                <input type="tel" id="mobile" placeholder="Mobile Number" required>
+                <input type="email" id="email" placeholder="Email" required>
+                <input type="password" id="password" placeholder="Password" required>
+                <input type="password" id="confirm" placeholder="Confirm Password" required>
+
+                <button type="submit" class="btn-primary">Register</button>
+
+            </form>
+
+            <!-- OTP -->
+            <div class="otp-box" id="otpBox">
+                <h3>Enter OTP</h3>
+                <input type="text" id="otpInput" placeholder="Enter OTP">
+                <button onclick="verifyOTP()">Verify OTP</button>
+                <p id="timer"></p>
+            </div>
+
+            <div class="success" id="successMsg">
+                ✅ Account Created Successfully
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        const API = "http://localhost:5000";
+
+        let generatedOTP = null;
+
+        // ================= CANVAS =================
+        const c = document.getElementById("canvas");
+        const ctx = c.getContext("2d");
+
+        function draw() {
+            ctx.clearRect(0, 0, 400, 120);
+
+            let g = ctx.createLinearGradient(0, 0, 400, 120);
+            g.addColorStop(0, "#667eea");
+            g.addColorStop(1, "#764ba2");
+
+            ctx.fillStyle = g;
+            ctx.fillRect(0, 0, 400, 120);
+
+            ctx.fillStyle = "#fff";
+            ctx.font = "bold 18px Arial";
+            ctx.fillText("Secure Registration", 120, 60);
+        }
+        draw();
+
+        // ================= REGISTER =================
+        document.getElementById("form").addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const pass = val("password");
+            const confirm = val("confirm");
+            const mobile = val("mobile");
+
+            if (pass !== confirm) {
+                alert("Password mismatch ❌");
+                return;
+            }
+
+            try {
+                const res = await fetch(API + "/api/auth/send-otp", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ mobile })
+                });
+
+                if (res.ok) {
+                    alert("OTP sent! (Check backend console)");
+                    document.getElementById("otpBox").style.display = "block";
+                    startTimer();
+                } else {
+                    alert("Failed to send OTP");
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Network error");
+            }
+        });
+
+        // ================= VERIFY OTP =================
+        async function verifyOTP() {
+            const otp = document.getElementById("otpInput").value;
+            if (!otp) return alert("Please enter OTP");
+
+            try {
+                // register API call
+                const res = await fetch(API + "/register", {
+                    method: "POST",
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: val("name"),
+                        mobile: val("mobile"),
+                        email: val("email"),
+                        password: val("password"),
+                        otp: otp
+                    })
+                });
+
+                if (res.ok) {
+                    document.getElementById("form").style.display = "none";
+                    document.getElementById("otpBox").style.display = "none";
+                    document.getElementById("successMsg").style.display = "block";
+                } else {
+                    const data = await res.json();
+                    alert("Registration failed: " + (data.error || "Unknown error"));
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Network error");
+            }
+        }
+
+        // ================= TIMER =================
+        function startTimer() {
+            let time = 30;
+            const t = document.getElementById("timer");
+
+            const interval = setInterval(() => {
+                t.innerText = "OTP expires in " + time + " sec";
+                time--;
+
+                if (time < 0) {
+                    clearInterval(interval);
+                    t.innerText = "OTP expired ❌";
+                }
+            }, 1000);
+        }
+
+        // ================= HELP =================
+        function val(id) {
+            return document.getElementById(id).value;
+        }
+    </script>
+
+</body>
+
+</html>

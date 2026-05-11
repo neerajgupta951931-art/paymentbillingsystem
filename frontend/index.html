@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PayBill - Modern Payment Gateway</title>
+    <link rel="stylesheet" href="styles/styles.css">
+<link rel="stylesheet" href="styles/billing-bg.css">
+</head>
+
+<body>
+    <div class="container">
+        <div class="header" style="text-align: center; margin-bottom: 50px;">
+            <h1 style="font-size: 48px; margin-bottom: 10px;">💳 PayBill</h1>
+            <p style="color: #666; font-size: 18px;">Your Digital Payment Companion</p>
+        </div>
+
+        <div class="card mb-30">
+            <h3 class="text-center mb-20">Welcome Aboard!</h3>
+            <div class="canvas-container">
+                <canvas id="welcomeCanvas" width="600" height="250"></canvas>
+            </div>
+        </div>
+
+        <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 30px;">
+            <div class="card">
+                <h3 class="text-center mb-20">👤 Existing User?</h3>
+                <p class="text-center" style="color: #666; margin-bottom: 20px;">Access your account and manage payments
+                </p>
+                <button class="btn-primary" onclick="window.location='login.html'" style="width: 100%;">🔐 Login to
+                    Account</button>
+                <p class="text-center mt-15">
+                    <a href="forgate.htm" style="color: #667eea; text-decoration: none; font-size: 12px;">Forgot
+                        password?</a>
+                </p>
+            </div>
+
+            <div class="card">
+                <h3 class="text-center mb-20">✨ New Here?</h3>
+                <p class="text-center" style="color: #666; margin-bottom: 20px;">Create your account and start making
+                    payments</p>
+                <button class="btn-primary" onclick="window.location='register/registration.html'"
+                    style="width: 100%;">📝 Create Account</button>
+                <p class="text-center mt-15" style="font-size: 12px; color: #999;">Takes just 2 minutes</p>
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <h3 class="text-center mb-20">✨ Features</h3>
+                <div class="flex-col" style="gap: 12px;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 20px;">💰</span>
+                        <span>Fast Money Transfer</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 20px;">📱</span>
+                        <span>Mobile Recharge</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 20px;">📄</span>
+                        <span>Bill Payments</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 20px;">🎁</span>
+                        <span>Earn Rewards</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 class="text-center mb-20">🛡️ Security</h3>
+                <div class="flex-col" style="gap: 12px;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 20px;">🔒</span>
+                        <span>256-bit Encryption</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 20px;">✓</span>
+                        <span>2-Factor Auth</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 20px;">🏦</span>
+                        <span>Bank-Grade Security</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 20px;">📱</span>
+                        <span>Biometric Support</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 class="text-center mb-20">⚡ Quick & Easy</h3>
+                <p class="text-center" style="color: #666;">Get started in seconds with our simple onboarding</p>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px;">
+                    <div
+                        style="text-align: center; background: rgba(102, 126, 234, 0.1); padding: 15px; border-radius: 10px;">
+                        <p style="margin: 0; font-size: 24px; font-weight: bold; color: #667eea;">1000+</p>
+                        <p style="margin: 5px 0 0 0; font-size: 12px; color: #666;">Active Users</p>
+                    </div>
+                    <div
+                        style="text-align: center; background: rgba(78, 205, 196, 0.1); padding: 15px; border-radius: 10px;">
+                        <p style="margin: 0; font-size: 24px; font-weight: bold; color: #4ecdc4;">₹5Cr+</p>
+                        <p style="margin: 5px 0 0 0; font-size: 12px; color: #666;">Transactions</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 class="text-center mb-20">📞 Support</h3>
+                <div class="flex-col" style="gap: 12px;">
+                    <div
+                        style="background: rgba(102, 126, 234, 0.1); padding: 12px; border-radius: 10px; text-align: center;">
+                        <p style="margin: 0; font-size: 12px; color: #666;">24/7 Customer Support</p>
+                        <p style="margin: 5px 0 0 0; font-weight: bold;">support@paybill.com</p>
+                    </div>
+                    <div
+                        style="background: rgba(78, 205, 196, 0.1); padding: 12px; border-radius: 10px; text-align: center;">
+                        <p style="margin: 0; font-size: 12px; color: #666;">Call us anytime</p>
+                        <p style="margin: 5px 0 0 0; font-weight: bold;">📞 1800-PAYBILL</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div
+            style="text-align: center; margin-top: 50px; padding: 30px; background: rgba(102, 126, 234, 0.05); border-radius: 15px;">
+            <p style="color: #666; margin: 0; font-size: 14px;">
+                By signing up, you agree to our
+                <a href="#" style="color: #667eea; text-decoration: none;">Terms of Service</a> and
+                <a href="#" style="color: #667eea; text-decoration: none;">Privacy Policy</a>
+            </p>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            drawWelcomeCanvas();
+        });
+
+        function drawWelcomeCanvas() {
+            const canvas = document.getElementById('welcomeCanvas');
+            if (!canvas) return;
+
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Background gradient
+            const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+            gradient.addColorStop(0, 'rgba(102, 126, 234, 0.1)');
+            gradient.addColorStop(1, 'rgba(78, 205, 196, 0.1)');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw decorative circles
+            const circles = [
+                { x: 100, y: 80, r: 40, color: '#667eea' },
+                { x: 500, y: 100, r: 50, color: '#764ba2' },
+                { x: 300, y: 200, r: 35, color: '#4ecdc4' }
+            ];
+
+            circles.forEach(circle => {
+                ctx.fillStyle = circle.color;
+                ctx.globalAlpha = 0.2;
+                ctx.beginPath();
+                ctx.arc(circle.x, circle.y, circle.r, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalAlpha = 1;
+
+                ctx.strokeStyle = circle.color;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(circle.x, circle.y, circle.r, 0, Math.PI * 2);
+                ctx.stroke();
+            });
+
+            // Main text
+            ctx.fillStyle = '#2d3436';
+            ctx.font = 'bold 28px Inter';
+            ctx.textAlign = 'center';
+            ctx.fillText('Welcome to PayBill', canvas.width / 2, 50);
+
+            ctx.font = '16px Inter';
+            ctx.fillStyle = '#666';
+            ctx.fillText('Simple. Secure. Reliable.', canvas.width / 2, 80);
+
+            // Feature icons
+            ctx.font = '32px Inter';
+            ctx.textAlign = 'left';
+            ctx.fillText('💳', 50, 140);
+            ctx.fillStyle = '#2d3436';
+            ctx.font = '14px Inter';
+            ctx.fillText('Payments', 100, 150);
+
+            ctx.font = '32px Inter';
+            ctx.fillText('📱', 250, 140);
+            ctx.fillStyle = '#2d3436';
+            ctx.font = '14px Inter';
+            ctx.fillText('Mobile', 300, 150);
+
+            ctx.font = '32px Inter';
+            ctx.fillText('📄', 400, 140);
+            ctx.fillStyle = '#2d3436';
+            ctx.font = '14px Inter';
+            ctx.fillText('Bills', 450, 150);
+
+            ctx.font = '32px Inter';
+            ctx.fillText('🎁', 500, 140);
+            ctx.fillStyle = '#2d3436';
+            ctx.font = '14px Inter';
+            ctx.fillText('Rewards', 540, 150);
+        }
+    </script>
+</body>
+
+</html>
+<html>
+
+<head>
+    <title>Payment Billing System</title>
+    <link rel="stylesheet" href="styles/styles.css">
+<link rel="stylesheet" href="styles/billing-bg.css">
+</head>
+
+<body>
+    <div class="container">
+        <h1>Welcome to Payment Billing System</h1>
+
+        <div class="card text-center">
+            <p>Click below to get started:</p>
+            <button onclick="window.location='login.html'">Login</button>
+            <button onclick="window.location='register/registration.html'">Register</button>
+        </div>
+    </div>
+</body>
+
+</html>

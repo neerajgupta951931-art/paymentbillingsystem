@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Payment Billing</title>
+    <link rel="stylesheet" href="styles/styles.css">
+<link rel="stylesheet" href="styles/billing-bg.css">
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>💳 PayBill</h1>
+            <span>Secure Payment System</span>
+        </div>
+
+        <div class="card">
+            <h2 class="text-center mb-30">Welcome Back</h2>
+
+            <div class="canvas-container mb-30">
+                <canvas id="loginCanvas" width="400" height="150" style="max-width: 100%;"></canvas>
+            </div>
+
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="loginMobile">📱 Mobile Number</label>
+                    <input type="tel" id="loginMobile" placeholder="Enter your mobile number" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="loginPassword">🔒 Password</label>
+                    <input type="password" id="loginPassword" placeholder="Enter your password" required>
+                </div>
+
+                <button type="submit" class="btn-primary">🔓 Login Now</button>
+            </form>
+
+            <div class="text-center mt-20">
+                <p>Don't have an account? <a href="register/registration.html">Create one</a></p>
+                <p><a href="forgot.html">Forgot password?</a></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Shared JavaScript modules -->
+    <script src="js/api.js"></script>
+    <script src="js/user.js"></script>
+    <script src="js/navigation.js"></script>
+    <script src="js/canvas.js"></script>
+    <script src="script.js"></script>
+    <script>
+        // Login page specific code
+        document.addEventListener('DOMContentLoaded', function () {
+            // Canvas animation for login
+            const canvas = document.getElementById('loginCanvas');
+            if (canvas) {
+                const ctx = canvas.getContext('2d');
+
+                function drawLoginCanvas() {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                    // Draw background gradient
+                    const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+                    gradient.addColorStop(0, '#667eea');
+                    gradient.addColorStop(1, '#764ba2');
+                    ctx.fillStyle = gradient;
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                    // Draw decorative circles
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+                    for (let i = 0; i < 5; i++) {
+                        ctx.beginPath();
+                        ctx.arc(Math.random() * canvas.width, Math.random() * canvas.height, 20 + Math.random() * 30, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+
+                    // Draw text
+                    ctx.fillStyle = '#fff';
+                    ctx.font = 'bold 24px Inter';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('Secure Payment Gateway', canvas.width / 2, canvas.height / 2);
+                }
+
+
+                document.getElementById("loginForm").addEventListener("submit", async (e) => {
+                    e.preventDefault();
+
+                    const mobile = document.getElementById("loginMobile").value;
+                    const password = document.getElementById("loginPassword").value;
+
+                    const res = await fetch("http://localhost:5000/login", {
+                        method: "POST",
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ mobile, password })
+                    });
+
+                    const data = await res.json();
+
+                    if (data.success) {
+                        alert("Login Success");
+
+                        localStorage.setItem("user", JSON.stringify(data.user));
+
+                        window.location.href = "dashboard.html";
+                    } else {
+                        alert("Invalid login");
+                    }
+                });
+
+                // Initial draw
+                drawLoginCanvas();
+
+                // Animate every 3 seconds
+                setInterval(drawLoginCanvas, 3000);
+            }
+        });
+    </script>
+</body>
+
+</html>

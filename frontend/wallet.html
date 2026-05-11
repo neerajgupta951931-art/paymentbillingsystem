@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Wallet - PayBill</title>
+    <link rel="stylesheet" href="styles/styles.css">
+<link rel="stylesheet" href="styles/billing-bg.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>💰 Digital Wallet</h1>
+            <a href="dashboard.html">← Dashboard</a>
+        </div>
+
+        <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 30px;">
+            <div class="card">
+                <h3 class="mb-20">Balance Overview</h3>
+                <div class="canvas-container">
+                    <canvas id="balanceCanvas" width="400" height="200"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="text-center mb-20">
+                    <h3>Current Balance</h3>
+                    <div style="font-size: 48px; font-weight: bold; color: #667eea; margin: 20px 0;">₹<span id="balanceAmount">2,450</span></div>
+                    <p class="text-secondary">Available for transactions</p>
+                </div>
+                <div class="flex-col" style="gap: 10px;">
+                    <button class="btn-primary" onclick="addMoney()">➕ Add Money</button>
+                    <button class="btn-secondary" onclick="sendMoney()">📤 Send Money</button>
+                    <button class="btn-secondary" onclick="requestMoney()">📥 Request Money</button>
+                    <button class="btn-secondary" onclick="viewCards()">💳 Manage Cards</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3 class="mb-20">📱 Recent Transactions</h3>
+            <div id="transactionList" class="flex-col" style="gap: 10px;">
+                <div style="display: flex; justify-content: space-between; padding: 12px; background: rgba(255,107,107, 0.1); border-radius: 8px;">
+                    <div>
+                        <p style="margin: 0; font-weight: bold;">Payment to John Doe</p>
+                        <small style="color: #666;">2 hours ago</small>
+                    </div>
+                    <p style="margin: 0; color: #ff6b6b; font-weight: bold;">-₹500</p>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 12px; background: rgba(78, 205, 196, 0.1); border-radius: 8px;">
+                    <div>
+                        <p style="margin: 0; font-weight: bold;">Money Added</p>
+                        <small style="color: #666;">1 day ago</small>
+                    </div>
+                    <p style="margin: 0; color: #4ecdc4; font-weight: bold;">+₹1,000</p>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 12px; background: rgba(255,107,107, 0.1); border-radius: 8px;">
+                    <div>
+                        <p style="margin: 0; font-weight: bold;">Bill Payment</p>
+                        <small style="color: #666;">3 days ago</small>
+                    </div>
+                    <p style="margin: 0; color: #ff6b6b; font-weight: bold;">-₹250</p>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 12px; background: rgba(78, 205, 196, 0.1); border-radius: 8px;">
+                    <div>
+                        <p style="margin: 0; font-weight: bold;">Refund</p>
+                        <small style="color: #666;">5 days ago</small>
+                    </div>
+                    <p style="margin: 0; color: #4ecdc4; font-weight: bold;">+₹200</p>
+                </div>
+            </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        const API_BASE_URL = 'http://localhost:5000';
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadWalletData();
+            drawBalanceChart();
+        });
+
+        function drawBalanceChart() {
+            const canvas = document.getElementById('balanceCanvas');
+            if (!canvas) return;
+            
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Background gradient
+            const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+            gradient.addColorStop(0, 'rgba(102, 126, 234, 0.05)');
+            gradient.addColorStop(1, 'rgba(78, 205, 196, 0.05)');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw balance distribution chart
+            const balance = 2450;
+            const spent = 1200;
+            const savings = 1250;
+
+            const centerX = 100;
+            const centerY = 100;
+            const radius = 60;
+
+            // Spent portion (red)
+            ctx.fillStyle = '#ff6b6b';
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, 0, (spent / balance) * Math.PI * 2);
+            ctx.lineTo(centerX, centerY);
+            ctx.fill();
+
+            // Savings portion (green)
+            ctx.fillStyle = '#4ecdc4';
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, (spent / balance) * Math.PI * 2, Math.PI * 2);
+            ctx.lineTo(centerX, centerY);
+            ctx.fill();
+
+            // Border
+            ctx.strokeStyle = '#667eea';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // Labels
+            ctx.fillStyle = '#2d3436';
+            ctx.font = 'bold 14px Inter';
+            ctx.textAlign = 'left';
+            ctx.fillText('Spent: ₹' + spent, 200, 80);
+            ctx.fillText('Savings: ₹' + savings, 200, 120);
+
+            ctx.font = '12px Inter';
+            ctx.fillStyle = '#666';
+            ctx.fillText('Balance Distribution', 200, 50);
+        }
+
+        async function loadWalletData() {
+            try {
+                let currentMobile = null;
+                const savedUser = localStorage.getItem('currentUser');
+                if (savedUser) {
+                    const parsed = JSON.parse(savedUser);
+                    currentMobile = parsed.mobile;
+                }
+                
+                if(!currentMobile) return;
+
+                const response = await fetch(`${API_BASE_URL}/user/${currentMobile}`, {
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                if (response.ok) {
+                    const user = await response.json();
+                    document.getElementById('balanceAmount').textContent = user.balance || '0';
+                    localStorage.setItem('currentUser', JSON.stringify(user));
+                }
+            } catch (error) {
+                console.error('Error loading wallet data:', error);
+            }
+        }
+
+        function addMoney() {
+            alert('Add money feature coming soon!');
+        }
+
+        function sendMoney() {
+            window.location = 'payment.html';
+        }
+
+        function requestMoney() {
+            alert('Request money feature coming soon!');
+        }
+
+        function viewCards() {
+            alert('Card management feature coming soon!');
+        }
+    </script>
+</body>
+</html>

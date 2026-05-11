@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Account - PayBill</title>
+    <link rel="stylesheet" href="styles/styles.css">
+<link rel="stylesheet" href="styles/billing-bg.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏢 Business Account</h1>
+            <a href="dashboard.html">← Dashboard</a>
+        </div>
+
+        <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 30px;">
+            <div class="card">
+                <h3 class="mb-20">Business Overview</h3>
+                <div class="canvas-container">
+                    <canvas id="businessCanvas" width="400" height="200"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 class="mb-20">📊 Key Metrics</h3>
+                <div class="flex-col" style="gap: 15px;">
+                    <div style="background: rgba(102, 126, 234, 0.1); padding: 15px; border-radius: 10px;">
+                        <p style="margin: 0; color: #666; font-size: 12px;">Monthly Revenue</p>
+                        <p style="margin: 5px 0 0 0; font-size: 24px; font-weight: bold; color: #667eea;">₹1,45,000</p>
+                    </div>
+                    <div style="background: rgba(78, 205, 196, 0.1); padding: 15px; border-radius: 10px;">
+                        <p style="margin: 0; color: #666; font-size: 12px;">Active Invoices</p>
+                        <p style="margin: 5px 0 0 0; font-size: 24px; font-weight: bold; color: #4ecdc4;">24</p>
+                    </div>
+                    <div style="background: rgba(255, 107, 107, 0.1); padding: 15px; border-radius: 10px;">
+                        <p style="margin: 0; color: #666; font-size: 12px;">Pending Payments</p>
+                        <p style="margin: 5px 0 0 0; font-size: 24px; font-weight: bold; color: #ff6b6b;">₹35,000</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <h3 class="mb-20">📋 Recent Invoices</h3>
+                <div class="flex-col" style="gap: 10px;">
+                    <div style="display: flex; justify-content: space-between; padding: 12px; background: #f5f5f5; border-radius: 8px;">
+                        <div>
+                            <p style="margin: 0; font-weight: bold;">Invoice #INV-001</p>
+                            <small style="color: #666;">Client: ABC Corp</small>
+                        </div>
+                        <p style="margin: 0; font-weight: bold;">₹15,000</p>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 12px; background: #f5f5f5; border-radius: 8px;">
+                        <div>
+                            <p style="margin: 0; font-weight: bold;">Invoice #INV-002</p>
+                            <small style="color: #666;">Client: XYZ Ltd</small>
+                        </div>
+                        <p style="margin: 0; font-weight: bold;">✓ ₹22,000</p>
+                    </div>
+                </div>
+                <button class="btn-primary mt-20" onclick="createInvoice()">➕ New Invoice</button>
+            </div>
+
+            <div class="card">
+                <h3 class="mb-20">⚙️ Business Tools</h3>
+                <div class="flex-col" style="gap: 10px;">
+                    <button class="btn-secondary" onclick="manageLaborers()">👥 Manage Team</button>
+                    <button class="btn-secondary" onclick="viewReports()">📊 Reports</button>
+                    <button class="btn-secondary" onclick="invoiceSettings()">⚙️ Invoice Settings</button>
+                    <button class="btn-secondary" onclick="businessSettings()">🏢 Business Settings</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        const API_BASE_URL = 'http://localhost:5000';
+
+        document.addEventListener('DOMContentLoaded', function() {
+            drawBusinessChart();
+        });
+
+        function drawBusinessChart() {
+            const canvas = document.getElementById('businessCanvas');
+            if (!canvas) return;
+
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Background
+            const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+            gradient.addColorStop(0, 'rgba(102, 126, 234, 0.05)');
+            gradient.addColorStop(1, 'rgba(78, 205, 196, 0.05)');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Chart title
+            ctx.fillStyle = '#2d3436';
+            ctx.font = 'bold 14px Inter';
+            ctx.textAlign = 'left';
+            ctx.fillText('Monthly Revenue Trend', 20, 25);
+
+            // Line chart data
+            const data = [40, 55, 65, 85, 75, 95, 88];
+            const pointSpacing = 50;
+            const startX = 30;
+            const startY = 150;
+
+            ctx.strokeStyle = '#667eea';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+
+            data.forEach((value, i) => {
+                const x = startX + i * pointSpacing;
+                const y = startY - (value * 0.8);
+
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            });
+            ctx.stroke();
+
+            // Draw points
+            ctx.fillStyle = '#764ba2';
+            data.forEach((value, i) => {
+                const x = startX + i * pointSpacing;
+                const y = startY - (value * 0.8);
+                ctx.beginPath();
+                ctx.arc(x, y, 5, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            // X-axis
+            ctx.strokeStyle = '#ddd';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(20, startY);
+            ctx.lineTo(380, startY);
+            ctx.stroke();
+        }
+
+        function createInvoice() {
+            alert('Create invoice feature coming soon!');
+        }
+
+        function manageLaborers() {
+            alert('Team management feature coming soon!');
+        }
+
+        function viewReports() {
+            alert('Reports feature coming soon!');
+        }
+
+        function invoiceSettings() {
+            alert('Invoice settings feature coming soon!');
+        }
+
+        function businessSettings() {
+            alert('Business settings feature coming soon!');
+        }
+    </script>
+</body>
+</html>
+<html>
+
+<head>
+
+<title>Business Panel</title>
+
+<style>
+
+*{
+box-sizing:border-box;
+}
+
+body{
+margin:0;
+font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+background:linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+color:white;
+min-height:100vh;
+display:flex;
+align-items:center;
+justify-content:center;
+padding:20px;
+overflow-x:hidden;
+}
+
+.container{
+background:rgba(255,255,255,0.1);
+backdrop-filter:blur(15px);
+border-radius:25px;
+padding:40px;
+width:100%;
+max-width:450px;
+box-shadow:0 20px 40px rgba(0,0,0,0.3);
+border:1px solid rgba(255,255,255,0.2);
+position:relative;
+}
+
+h2{
+color:#fff;
+margin-bottom:40px;
+font-size:32px;
+text-shadow:0 2px 4px rgba(0,0,0,0.3);
+display:flex;
+align-items:center;
+justify-content:center;
+gap:15px;
+}
+
+.form-group{
+position:relative;
+margin-bottom:25px;
+}
+
+.form-group i{
+position:absolute;
+left:18px;
+top:50%;
+transform:translateY(-50%);
+color:#ddd;
+font-size:20px;
+z-index:2;
+}
+
+input{
+width:100%;
+padding:18px 18px 18px 50px;
+border:none;
+border-radius:15px;
+background:rgba(255,255,255,0.15);
+color:white;
+font-size:16px;
+transition:all 0.3s ease;
+box-sizing:border-box;
+border:1px solid rgba(255,255,255,0.2);
+}
+
+input::placeholder{
+color:#ddd;
+opacity:0.8;
+}
+
+input:focus{
+outline:none;
+background:rgba(255,255,255,0.25);
+box-shadow:0 0 0 3px rgba(255,255,255,0.3);
+transform:translateY(-2px);
+border-color:rgba(255,255,255,0.5);
+}
+
+button{
+width:100%;
+padding:18px;
+margin-top:30px;
+border:none;
+border-radius:15px;
+background:linear-gradient(45deg, #00d4ff, #090979);
+color:white;
+font-size:18px;
+font-weight:bold;
+cursor:pointer;
+transition:all 0.3s ease;
+position:relative;
+overflow:hidden;
+box-shadow:0 4px 15px rgba(0, 148, 255, 0.3);
+}
+
+button:hover{
+transform:translateY(-3px);
+box-shadow:0 8px 25px rgba(0, 148, 255, 0.4);
+}
+
+button:active{
+transform:translateY(-1px);
+}
+
+button.loading{
+pointer-events:none;
+background:linear-gradient(45deg, #666, #999);
+}
+
+button.loading::after{
+content:'';
+position:absolute;
+top:50%;
+left:50%;
+width:24px;
+height:24px;
+margin:-12px 0 0 -12px;
+border:3px solid transparent;
+border-top:3px solid white;
+border-radius:50%;
+animation:spin 1s linear infinite;
+}
+
+@keyframes spin{
+0%{transform:rotate(0deg);}
+100%{transform:rotate(360deg);}
+}
+
+.back-btn{
+position:absolute;
+top:20px;
+left:20px;
+background:rgba(255,255,255,0.2);
+color:white;
+border:none;
+padding:12px 18px;
+border-radius:12px;
+cursor:pointer;
+backdrop-filter:blur(5px);
+transition:all 0.3s ease;
+font-size:14px;
+z-index:10;
+}
+
+.back-btn:hover{
+background:rgba(255,255,255,0.3);
+transform:scale(1.05);
+}
+
+.message{
+margin-top:25px;
+padding:15px;
+border-radius:12px;
+text-align:center;
+font-weight:bold;
+opacity:0;
+transform:translateY(20px);
+transition:all 0.4s ease;
+}
+
+.message.show{
+opacity:1;
+transform:translateY(0);
+}
+
+.message.success{
+background:linear-gradient(45deg, #4CAF50, #45a049);
+color:white;
+}
+
+.message.error{
+background:linear-gradient(45deg, #f44336, #d32f2f);
+color:white;
+}
+
+.stats{
+display:flex;
+justify-content:space-around;
+margin-top:30px;
+padding:20px;
+background:rgba(255,255,255,0.1);
+border-radius:15px;
+backdrop-filter:blur(5px);
+}
+
+.stat{
+text-align:center;
+}
+
+.stat h3{
+margin:0;
+font-size:24px;
+color:#00d4ff;
+}
+
+.stat p{
+margin:5px 0 0 0;
+color:#ddd;
+font-size:14px;
+}
+
+</style>
+
+<link rel="stylesheet" href="styles/billing-bg.css">
+</head>
+
+<body>
+
+<button class="back-btn" onclick="goBack()">←</button>
+
+<div class="container">
+
+<h2>🏪 Business Panel</h2>
+
+<div class="form-group">
+<i>🏪</i>
+<input id="shop" placeholder="Shop/Business Name" type="text">
+</div>
+
+<div class="form-group">
+<i>👤</i>
+<input id="owner" placeholder="Owner Name" type="text">
+</div>
+
+<div class="form-group">
+<i>💰</i>
+<input id="amount" placeholder="Payment Amount (₹)" type="number" min="1">
+</div>
+
+<button onclick="receivePayment()" id="payBtn">💰 Receive Payment</button>
+
+<div class="message" id="message"></div>
+
+<div class="stats">
+<div class="stat">
+<h3 id="todayTotal">₹0</h3>
+<p>Today's Total</p>
+</div>
+<div class="stat">
+<h3 id="transactionCount">0</h3>
+<p>Transactions</p>
+</div>
+</div>
+
+</div>
+
+
+<script>
+
+function goBack(){
+window.location = 'dashboard.html';
+}
+
+function showMessage(text, type){
+const msg = document.getElementById('message');
+msg.textContent = text;
+msg.className = 'message ' + type;
+msg.classList.add('show');
+setTimeout(() => {
+msg.classList.remove('show');
+}, 4000);
+}
+
+function receivePayment(){
+
+const shop = document.getElementById('shop');
+const owner = document.getElementById('owner');
+const amount = document.getElementById('amount');
+const btn = document.getElementById('payBtn');
+
+if(!shop.value || !owner.value || !amount.value){
+showMessage('Please fill all fields', 'error');
+return;
+}
+
+if(amount.value < 1){
+showMessage('Amount must be at least ₹1', 'error');
+return;
+}
+
+btn.classList.add('loading');
+btn.textContent = 'Processing...';
+
+fetch("http://localhost:5000/business",{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({
+
+shop:shop.value,
+owner:owner.value,
+amount:amount.value
+
+})
+
+})
+.then(r=>r.text())
+.then(d=>{
+btn.classList.remove('loading');
+btn.textContent = '💰 Receive Payment';
+
+if(d.includes('success') || d.includes('Success') || d.includes('received')){
+showMessage('Payment received successfully! 🎉', 'success');
+// Update stats
+updateStats();
+shop.value = '';
+owner.value = '';
+amount.value = '';
+}else{
+showMessage('Payment failed: ' + d, 'error');
+}
+})
+.catch(err=>{
+btn.classList.remove('loading');
+btn.textContent = '💰 Receive Payment';
+showMessage('Network error. Please try again.', 'error');
+});
+
+}
+
+function updateStats(){
+// Simulate updating stats (in real app, fetch from server)
+const todayTotal = document.getElementById('todayTotal');
+const transactionCount = document.getElementById('transactionCount');
+
+const currentTotal = parseInt(todayTotal.textContent.replace('₹', '')) || 0;
+const currentCount = parseInt(transactionCount.textContent) || 0;
+const newAmount = parseInt(document.getElementById('amount').value) || 0;
+
+todayTotal.textContent = '₹' + (currentTotal + newAmount);
+transactionCount.textContent = currentCount + 1;
+}
+
+// Load initial stats on page load
+window.onload = function(){
+updateStats(); // This would normally load from server
+};
+
+</script>

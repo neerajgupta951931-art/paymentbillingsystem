@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reset Password - PayBill</title>
+    <link rel="stylesheet" href="styles/styles.css">
+<link rel="stylesheet" href="styles/billing-bg.css">
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔐 Reset Password</h1>
+            <p class="text-center">Recover your account access</p>
+        </div>
+
+        <div style="max-width: 600px; margin: 0 auto;">
+            <div class="card mb-30">
+                <h3 class="text-center mb-20">Step 1: Verify Identity</h3>
+                <form class="flex-col" style="gap: 15px;">
+                    <div>
+                        <label for="resetMobile">Mobile Number</label>
+                        <input type="tel" id="resetMobile" placeholder="Enter registered mobile" required>
+                    </div>
+                    <div>
+                        <label for="resetDOB">Date of Birth</label>
+                        <input type="date" id="resetDOB" required>
+                    </div>
+                    <button type="button" class="btn-primary" onclick="verifyIdentity()">📤 Send OTP</button>
+                </form>
+            </div>
+
+            <div class="card mb-30" id="otpSection" style="display: none;">
+                <h3 class="text-center mb-20">Step 2: Verify OTP</h3>
+                <p class="text-center" style="color: #666; font-size: 14px;">OTP sent to your registered mobile</p>
+                <form class="flex-col" style="gap: 15px; margin-top: 20px;">
+                    <div>
+                        <label for="resetOTP">Enter OTP</label>
+                        <input type="text" id="resetOTP" placeholder="6-digit OTP" maxlength="6" required>
+                    </div>
+                    <div class="canvas-container" style="display: flex; justify-content: center; margin: 20px 0;">
+                        <canvas id="captchaCanvas" width="300" height="80"></canvas>
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="captchaInput" placeholder="Enter captcha" style="flex: 1;">
+                        <button type="button" class="btn-secondary" onclick="refreshCaptcha()">🔄</button>
+                    </div>
+                    <button type="button" class="btn-primary" onclick="verifyOTP()">✓ Verify OTP</button>
+                </form>
+                <p class="text-center mt-15" style="font-size: 12px; color: #999;">
+                    Didn't receive? <a href="#" onclick="resendOTP()"
+                        style="color: #667eea; text-decoration: none;">Resend OTP</a>
+                </p>
+            </div>
+
+            <div class="card" id="passwordSection" style="display: none;">
+                <h3 class="text-center mb-20">Step 3: Create New Password</h3>
+                <form class="flex-col" style="gap: 15px;">
+                    <div>
+                        <label for="newPassword">New Password</label>
+                        <input type="password" id="newPassword" placeholder="Create strong password" required>
+                        <small style="color: #666; margin-top: 5px; display: block;">Min 8 characters, mix of letters
+                            and numbers</small>
+                    </div>
+                    <div>
+                        <label for="confirmPassword">Confirm Password</label>
+                        <input type="password" id="confirmPassword" placeholder="Re-enter password" required>
+                    </div>
+                    <div id="passwordStrength"
+                        style="background: rgba(102, 126, 234, 0.1); padding: 10px; border-radius: 8px; display: none;">
+                        <p style="margin: 0; font-size: 12px; color: #666;">Password Strength:</p>
+                        <div
+                            style="background: #ddd; height: 6px; border-radius: 3px; margin-top: 5px; overflow: hidden;">
+                            <div id="strengthBar"
+                                style="background: #4ecdc4; height: 100%; width: 60%; transition: all 0.3s;"></div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-primary" onclick="resetPassword()">🔒 Reset Password</button>
+                </form>
+            </div>
+
+            <div class="card" id="successSection"
+                style="display: none; background: #d4edda; border-left: 4px solid #4ecdc4;">
+                <h3 class="text-success text-center mb-20">✓ Password Changed Successfully!</h3>
+                <p class="text-center">Your password has been reset. You can now login with your new password.</p>
+                <button class="btn-primary mt-20" onclick="window.location='login.html'" style="width: 100%;">🔐 Back to
+                    Login</button>
+            </div>
+        </div>
+
+        <div class="text-center mt-30">
+            <p style="color: #666;">Remember your password? <a href="login.html"
+                    style="color: #667eea; text-decoration: none; font-weight: bold;">Login</a></p>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        const API_BASE_URL = 'http://localhost:5000';
+        let captchacode = '';
+
+        document.addEventListener('DOMContentLoaded', function () {
+            generateCaptcha();
+            setupPasswordStrengthCheck();
+        });
+
+        function generateCaptcha() {
+            const canvas = document.getElementById('captchaCanvas');
+            if (!canvas) return;
+
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Background
+            ctx.fillStyle = 'rgba(102, 126, 234, 0.05)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Generate random code
+            captchaCode = Math.floor(1000 + Math.random() * 9000).toString();
+
+            // Draw code with random style
+            ctx.font = 'bold 32px Arial';
+            ctx.fillStyle = '#667eea';
+            ctx.textAlign = 'center';
+
+            // Add slight rotation and noise
+            let x = canvas.width / 2;
+            let y = canvas.height / 2 + 10;
+
+            for (let i = 0; i < captchaCode.length; i++) {
+                ctx.save();
+                ctx.translate(x - 50 + i * 50, y);
+                ctx.rotate((Math.random() - 0.5) * 0.3);
+                ctx.fillText(captchaCode[i], 0, 0);
+                ctx.restore();
+            }
+
+            // Add noise lines
+            ctx.strokeStyle = '#ddd';
+            ctx.lineWidth = 1;
+            for (let i = 0; i < 3; i++) {
+                ctx.beginPath();
+                ctx.moveTo(Math.random() * canvas.width, Math.random() * canvas.height);
+                ctx.lineTo(Math.random() * canvas.width, Math.random() * canvas.height);
+                ctx.stroke();
+            }
+        }
+
+        function refreshCaptcha() {
+            generateCaptcha();
+            document.getElementById('captchaInput').value = '';
+            document.getElementById('captchaInput').focus();
+        }
+
+        function setupPasswordStrengthCheck() {
+            const pwd = document.getElementById('newPassword');
+            if (pwd) {
+                pwd.addEventListener('input', checkPasswordStrength);
+            }
+        }
+
+        function checkPasswordStrength() {
+            const pwd = document.getElementById('newPassword').value;
+            const strengthBar = document.getElementById('strengthBar');
+            const strengthSection = document.getElementById('passwordStrength');
+
+            if (pwd.length > 0) {
+                strengthSection.style.display = 'block';
+                let strength = 0;
+
+                if (pwd.length >= 8) strength += 20;
+                if (pwd.length >= 12) strength += 20;
+                if (/[a-z]/.test(pwd)) strength += 20;
+                if (/[A-Z]/.test(pwd)) strength += 20;
+                if (/[0-9]/.test(pwd)) strength += 20;
+
+                strengthBar.style.width = strength + '%';
+                strengthBar.style.background = strength < 40 ? '#ff6b6b' : strength < 70 ? '#ffa500' : '#4ecdc4';
+            } else {
+                strengthSection.style.display = 'none';
+            }
+        }
+
+        async function verifyIdentity() {
+            const mobile = document.getElementById('resetMobile').value;
+            const dob = document.getElementById('resetDOB').value;
+
+            if (!mobile || !dob) {
+                alert('Please fill all fields');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/otp`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ mobile, dob })
+                });
+
+                if (response.ok) {
+                    alert('OTP sent to your mobile');
+                    document.getElementById('otpSection').style.display = 'block';
+                }
+            } catch (error) {
+                alert('Error sending OTP. Please try again.');
+            }
+        }
+
+        async function verifyOTP() {
+            const otp = document.getElementById('resetOTP').value;
+            const captcha = document.getElementById('captchaInput').value;
+
+            if (captcha !== captchaCode) {
+                alert('Invalid captcha');
+                refreshCaptcha();
+                return;
+            }
+
+            if (!otp) {
+                alert('Enter OTP');
+                return;
+            }
+
+            alert('OTP verified. Proceed to reset password.');
+            document.getElementById('otpSection').style.display = 'none';
+            document.getElementById('passwordSection').style.display = 'block';
+        }
+
+        async function resetPassword() {
+            const mobile = document.getElementById('resetMobile').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            if (newPassword !== confirmPassword) {
+                alert('Passwords do not match');
+                return;
+            }
+
+            if (newPassword.length < 8) {
+                alert('Password must be at least 8 characters');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/forgot`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ mobile, newpass: newPassword })
+                });
+
+                if (response.ok) {
+                    document.getElementById('passwordSection').style.display = 'none';
+                    document.getElementById('successSection').style.display = 'block';
+                } else {
+                    alert('Failed to reset password');
+                }
+            } catch (error) {
+                alert('Error resetting password');
+            }
+        }
+
+        function resendOTP() {
+            alert('OTP resent to your mobile');
+        }
+    </script>
+</body>
+
+</html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forgot Password</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .forgot-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 300px;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 10px 0;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        .back-link {
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        .back-link a {
+            color: #4CAF50;
+            text-decoration: none;
+        }
+
+        .back-link a:hover {
+            text-decoration: underline;
+        }
+
+        #captcha {
+            text-align: center;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+
+        #captchaCode {
+            font-size: 18px;
+            color: #ff0000;
+        }
+    </style>
+<link rel="stylesheet" href="styles/billing-bg.css">
+</head>
+
+<body>
+    <div class="forgot-container">
+        <h2>Forgot Password</h2>
+
+        <input id="mobile" placeholder="Mobile">
+
+        <input id="dob" placeholder="DOB">
+
+
+
+        <button onclick="otp()">Send OTP</button>
+
+        <input id="otp" placeholder="OTP">
+
+        <input id="newpass" placeholder="New password">
+
+        <div id="captcha">Captcha: <span id="captchaCode"></span></div>
+        <input id="captchaInput" placeholder="Enter captcha">
+
+        <button onclick="change()">Change</button>
+
+        <div class="back-link">
+            <a href="login.html">Back to Login</a>
+        </div>
+    </div>
+
+    <script>
+
+        let captchaCode;
+
+        window.onload = function () {
+            generateCaptcha();
+        }
+
+        function generateCaptcha() {
+            captchaCode = Math.floor(1000 + Math.random() * 9000).toString();
+            document.getElementById('captchaCode').textContent = captchaCode;
+        }
+
+        function otp() {
+
+            fetch("http://localhost:5000/otp", {
+                method: "POST"
+            })
+                .then(r => r.text())
+                .then(d => alert("OTP = " + d))
+
+        }
+
+
+        function change() {
+
+            if (document.getElementById('captchaInput').value !== captchaCode) {
+                alert('Wrong captcha!');
+                generateCaptcha();
+                return;
+            }
+
+            fetch("http://localhost:5000/forgot", {
+
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+
+                    mobile: mobile.value,
+                    dob: dob.value,
+                    newpass: newpass.value
+
+                })
+
+            })
+                .then(r => r.text())
+                .then(d => {
+                    alert(d);
+                    generateCaptcha();
+                })
+
+        }
+
+    </script>
+</body>
+
+</html>

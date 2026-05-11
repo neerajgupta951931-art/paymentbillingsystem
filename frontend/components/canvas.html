@@ -1,0 +1,36 @@
+<!-- Reusable Canvas Container Component -->
+<!-- Usage: Include this file and call createCanvasContainer(canvasId, width, height, title) -->
+<div class="card" id="canvasCard" style="display: none;">
+    <h3 id="canvasTitle" class="mb-20">Chart Title</h3>
+    <div class="canvas-container">
+        <canvas id="dynamicCanvas" width="400" height="200"></canvas>
+    </div>
+</div>
+
+<script>
+function createCanvasContainer(canvasId, width = 400, height = 200, title = 'Chart') {
+    const card = document.getElementById('canvasCard');
+    const canvasTitle = document.getElementById('canvasTitle');
+    const canvas = document.getElementById('dynamicCanvas');
+
+    if (card) card.style.display = 'block';
+    if (canvasTitle) canvasTitle.textContent = title;
+    if (canvas) {
+        canvas.id = canvasId;
+        canvas.width = width;
+        canvas.height = height;
+    }
+}
+
+// Auto-create canvas if data attributes are present
+document.addEventListener('DOMContentLoaded', function() {
+    const card = document.getElementById('canvasCard');
+    if (card) {
+        const canvasId = card.getAttribute('data-canvas-id') || 'chartCanvas';
+        const width = parseInt(card.getAttribute('data-width')) || 400;
+        const height = parseInt(card.getAttribute('data-height')) || 200;
+        const title = card.getAttribute('data-title') || 'Chart';
+        createCanvasContainer(canvasId, width, height, title);
+    }
+});
+</script>

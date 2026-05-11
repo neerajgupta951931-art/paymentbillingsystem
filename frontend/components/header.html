@@ -1,0 +1,31 @@
+<!-- Reusable Header Component -->
+<!-- Usage: Include this file and call createHeader(title, showBackButton) -->
+<div class="header" id="pageHeader">
+    <h1 id="pageTitle">📱 Page Title</h1>
+    <a href="dashboard.html" id="backLink" style="display: none;">← Dashboard</a>
+</div>
+
+<script>
+function createHeader(title, showBackButton = true) {
+    const titleElement = document.getElementById('pageTitle');
+    const backLink = document.getElementById('backLink');
+
+    if (titleElement) {
+        titleElement.textContent = title;
+    }
+
+    if (backLink) {
+        backLink.style.display = showBackButton ? 'inline-block' : 'none';
+    }
+}
+
+// Auto-create header if data attributes are present
+document.addEventListener('DOMContentLoaded', function() {
+    const headerElement = document.getElementById('pageHeader');
+    if (headerElement) {
+        const title = headerElement.getAttribute('data-title') || 'Page Title';
+        const showBack = headerElement.getAttribute('data-show-back') !== 'false';
+        createHeader(title, showBack);
+    }
+});
+</script>

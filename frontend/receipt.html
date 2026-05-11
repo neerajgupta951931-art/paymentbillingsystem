@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Payment Receipt</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .receipt-card {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            width: 350px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+
+        h2 {
+            color: #28a745;
+        }
+
+        .divider {
+            height: 1px;
+            background: #ddd;
+            margin: 15px 0;
+        }
+
+        .receipt-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+        }
+
+        button {
+            margin-top: 10px;
+            padding: 10px;
+            width: 100%;
+            border: none;
+            border-radius: 10px;
+            background: #007bff;
+            color: white;
+            cursor: pointer;
+        }
+
+        .btn-group {
+            margin-top: 15px;
+        }
+
+        .dark {
+            background: #0f172a;
+        }
+
+        .dark .receipt-card {
+            background: #1e293b;
+            color: white;
+        }
+    </style>
+
+<link rel="stylesheet" href="styles/billing-bg.css">
+</head>
+
+<body>
+
+    <div class="receipt-card">
+
+        <h2>✔ Payment Successful</h2>
+
+        <div class="divider"></div>
+
+        <div class="receipt-item">
+            <span>Amount</span>
+            <span id="rAmount"></span>
+        </div>
+
+        <div class="receipt-item">
+            <span>To</span>
+            <span id="rTo"></span>
+        </div>
+
+        <div class="receipt-item">
+            <span>Date</span>
+            <span id="rDate"></span>
+        </div>
+
+        <div class="receipt-item">
+            <span>Txn ID</span>
+            <span id="rId"></span>
+        </div>
+
+        <button onclick="goHome()">🏠 Dashboard</button>
+
+        <!-- ACTION BUTTONS -->
+        <div class="btn-group">
+            <button onclick="downloadPDF()">📄 Download PDF</button>
+            <button onclick="shareWhatsApp()">📤 Share WhatsApp</button>
+            <button onclick="printReceipt()">🧾 Print</button>
+            <button onclick="toggleDark()">🌙 Dark Mode</button>
+        </div>
+
+    </div>
+
+    <script>
+        let receipt = JSON.parse(localStorage.getItem("receipt"));
+
+        // SAFE CHECK
+        if (!receipt) {
+            receipt = {
+                amount: "0",
+                to: "Unknown",
+                date: new Date(),
+                id: "N/A"
+            };
+        }
+
+        // LOAD DATA
+        document.getElementById("rAmount").innerText = "₹" + receipt.amount;
+        document.getElementById("rTo").innerText = receipt.to;
+        document.getElementById("rDate").innerText = new Date(receipt.date).toLocaleString();
+        document.getElementById("rId").innerText = receipt.id;
+
+        // FUNCTIONS
+
+        function goHome() {
+            window.location = "dashboard.html";
+        }
+
+        // PRINT
+        function printReceipt() {
+            window.print();
+        }
+
+        // DARK MODE
+        function toggleDark() {
+            document.body.classList.toggle("dark");
+        }
+
+        // WHATSAPP SHARE
+        function shareWhatsApp() {
+            const msg = `Payment Successful\nAmount: ₹${receipt.amount}\nTo: ${receipt.to}\nTxn ID: ${receipt.id}`;
+            const url = `https://wa.me/?text=${encodeURIComponent(msg)}`;
+            window.open(url, "_blank");
+        }
+
+        // PDF DOWNLOAD (simple)
+        function downloadPDF() {
+            const content = `
+        Payment Receipt
+        ---------------------
+        Amount: ₹${receipt.amount}
+        To: ${receipt.to}
+        Date: ${new Date(receipt.date).toLocaleString()}
+        Txn ID: ${receipt.id}
+    `;
+
+            const blob = new Blob([content], { type: "text/plain" });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = "receipt.txt";
+            link.click();
+        }
+    </script>
+
+</body>
+
+</html>

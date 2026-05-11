@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment - PayBill</title>
+    <link rel="stylesheet" href="styles/styles.css">
+    <link rel="stylesheet" href="styles/billing-bg.css">
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>💳 Make Payment</h1>
+            <a href="dashboard.html">← Dashboard</a>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <h2 class="mb-20">Payment Details</h2>
+
+                <div class="canvas-container mb-30">
+                    <h4>Draw Your Signature</h4>
+                    <canvas id="signatureCanvas" width="350" height="150"
+                        style="border: 2px dashed #667eea; cursor: crosshair;"></canvas>
+                    <div class="canvas-controls mt-10">
+                        <button type="button" onclick="clearCanvas()" class="btn-secondary">Clear Signature</button>
+                    </div>
+                </div>
+
+                <form id="paymentForm">
+                    <div class="form-group">
+                        <label for="amount">💰 Amount (₹)</label>
+                        <input type="number" id="amount" placeholder="Enter amount" min="1" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="business">🏢 Select Business</label>
+                        <select id="business" required>
+                            <option value="">Choose a business</option>
+                            <option value="1">Tech Solutions Inc</option>
+                            <option value="2">Grocery Mart</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="description">📝 Description</label>
+                        <textarea id="description" placeholder="Payment description" rows="3"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="paymentMethod">💳 Payment Method</label>
+                        <select id="paymentMethod" required>
+                            <option value="wallet">💰 Wallet</option>
+                            <option value="upi">📱 UPI</option>
+                            <option value="card">💳 Card</option>
+                        </select>
+                    </div>
+
+                    <button type="submit">✓ Confirm Payment</button>
+                </form>
+
+                <div id="paymentResult" class="mt-20"></div>
+            </div>
+
+            <div class="card">
+                <h2 class="mb-20">Payment Status</h2>
+
+                <div class="canvas-container">
+                    <canvas id="statusCanvas" width="350" height="200"></canvas>
+                </div>
+
+                <div class="mt-20">
+                    <h4>Recent Payments</h4>
+                    <div id="paymentHistory"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        // Signature Canvas
+        const signatureCanvas = document.getElementById('signatureCanvas');
+        const signatureCtx = signatureCanvas.getContext('2d');
+        let isDrawing = false;
+
+        signatureCanvas.addEventListener('mousedown', (e) => {
+            isDrawing = true;
+            const rect = signatureCanvas.getBoundingClientRect();
+            signatureCtx.beginPath();
+            signatureCtx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+        });
+
+        signatureCanvas.addEventListener('mousemove', (e) => {
+            if (isDrawing) {
+                const rect = signatureCanvas.getBoundingClientRect();
+                signatureCtx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+                signatureCtx.stroke();
+            }
+        });
+
+        signatureCanvas.addEventListener('mouseup', () => { isDrawing = false; });
+        signatureCanvas.addEventListener('mouseout', () => { isDrawing = false; });
+
+        function clearCanvas() {
+            signatureCtx.clearRect(0, 0, signatureCanvas.width, signatureCanvas.height);
+        }
+
+        // Status Canvas
+        const statusCanvas = document.getElementById('statusCanvas');
+        const statusCtx = statusCanvas.getContext('2d');
+
+        function drawStatusChart() {
+            statusCtx.clearRect(0, 0, statusCanvas.width, statusCanvas.height);
+
+            // Draw gradient background
+            const gradient = statusCtx.createLinearGradient(0, 0, statusCanvas.width, statusCanvas.height);
+            gradient.addColorStop(0, 'rgba(102, 126, 234, 0.1)');
+            gradient.addColorStop(1, 'rgba(118, 75, 162, 0.1)');
+            statusCtx.fillStyle = gradient;
+            statusCtx.fillRect(0, 0, statusCanvas.width, statusCanvas.height);
+
+            // Draw chart
+            const data = [45, 60, 35, 70, 85];
+            const colors = ['#667eea', '#764ba2', '#45b7d1', '#4ecdc4', '#ff6b6b'];
+            const barWidth = statusCanvas.width / data.length;
+
+            data.forEach((value, i) => {
+                const height = (value / 100) * 150;
+                statusCtx.fillStyle = colors[i];
+                statusCtx.fillRect(i * barWidth + 10, 150 - height, barWidth - 20, height);
+            });
+
+            // Draw title
+            statusCtx.fillStyle = '#2d3436';
+            statusCtx.font = 'bold 16px Inter';
+            statusCtx.fillText('Payment Trends', 10, 25);
+        }
+
+        drawStatusChart();
+    </script>
+</body>
+
+</html>

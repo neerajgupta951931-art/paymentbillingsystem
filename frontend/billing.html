@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bill Payments - PayBill</title>
+    <link rel="stylesheet" href="styles/styles.css">
+<link rel="stylesheet" href="styles/billing-bg.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📄 Pay Bills</h1>
+            <a href="dashboard.html">← Dashboard</a>
+        </div>
+
+        <div class="card mb-30">
+            <h3 class="mb-20">Outstanding Bills</h3>
+            <div class="canvas-container">
+                <canvas id="billsCanvas" width="600" height="200"></canvas>
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <h3 class="mb-20">⚡ Electricity Bill</h3>
+                <p style="margin: 0; color: #666; font-size: 14px;">Amount Due</p>
+                <p style="margin: 5px 0 10px 0; font-size: 24px; font-weight: bold; color: #667eea;">₹1,250</p>
+                <p style="margin: 0; color: #999; font-size: 12px;">Due: 15th Jan 2024</p>
+                <button class="btn-primary mt-20" onclick="payBill('electricity', 1250)">Pay Now</button>
+            </div>
+
+            <div class="card">
+                <h3 class="mb-20">💧 Water Bill</h3>
+                <p style="margin: 0; color: #666; font-size: 14px;">Amount Due</p>
+                <p style="margin: 5px 0 10px 0; font-size: 24px; font-weight: bold; color: #4ecdc4;">₹520</p>
+                <p style="margin: 0; color: #999; font-size: 12px;">Due: 10th Jan 2024</p>
+                <button class="btn-primary mt-20" onclick="payBill('water', 520)">Pay Now</button>
+            </div>
+
+            <div class="card">
+                <h3 class="mb-20">📱 Internet Bill</h3>
+                <p style="margin: 0; color: #666; font-size: 14px;">Amount Due</p>
+                <p style="margin: 5px 0 10px 0; font-size: 24px; font-weight: bold; color: #45b7d1;">₹799</p>
+                <p style="margin: 0; color: #999; font-size: 12px;">Due: 20th Jan 2024</p>
+                <button class="btn-primary mt-20" onclick="payBill('internet', 799)">Pay Now</button>
+            </div>
+
+            <div class="card">
+                <h3 class="mb-20">🏠 Property Tax</h3>
+                <p style="margin: 0; color: #666; font-size: 14px;">Amount Due</p>
+                <p style="margin: 5px 0 10px 0; font-size: 24px; font-weight: bold; color: #ff6b6b;">₹3,500</p>
+                <p style="margin: 0; color: #999; font-size: 12px;">Due: 25th Jan 2024</p>
+                <button class="btn-primary mt-20" onclick="payBill('property', 3500)">Pay Now</button>
+            </div>
+        </div>
+
+        <div class="card mt-30">
+            <h3 class="mb-20">📊 Billing History</h3>
+            <div class="flex-col" style="gap: 10px;">
+                <div style="display: flex; justify-content: space-between; padding: 12px; background: #f5f5f5; border-radius: 8px;">
+                    <div>
+                        <p style="margin: 0; font-weight: bold;">Electricity</p>
+                        <small style="color: #666;">Paid on 15th Dec 2023</small>
+                    </div>
+                    <p style="margin: 0; color: #4ecdc4; font-weight: bold;">✓ ₹1,250</p>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 12px; background: #f5f5f5; border-radius: 8px;">
+                    <div>
+                        <p style="margin: 0; font-weight: bold;">Internet</p>
+                        <small style="color: #666;">Paid on 5th Dec 2023</small>
+                    </div>
+                    <p style="margin: 0; color: #4ecdc4; font-weight: bold;">✓ ₹799</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        const API_BASE_URL = 'http://localhost:5000';
+
+        document.addEventListener('DOMContentLoaded', function() {
+            drawBillsChart();
+        });
+
+        function drawBillsChart() {
+            const canvas = document.getElementById('billsCanvas');
+            if (!canvas) return;
+
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Background
+            const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+            gradient.addColorStop(0, 'rgba(102, 126, 234, 0.05)');
+            gradient.addColorStop(1, 'rgba(78, 205, 196, 0.05)');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Bills data
+            const bills = [
+                { name: 'Electricity', amount: 1250, color: '#ff9500' },
+                { name: 'Water', amount: 520, color: '#50c878' },
+                { name: 'Internet', amount: 799, color: '#667eea' },
+                { name: 'Property', amount: 3500, color: '#ff6b6b' }
+            ];
+
+            const barWidth = 100;
+            const spacing = 40;
+            let x = 30;
+            const maxAmount = 3500;
+
+            bills.forEach((bill, i) => {
+                const barHeight = (bill.amount / maxAmount) * 120;
+
+                // Draw bar
+                ctx.fillStyle = bill.color;
+                ctx.fillRect(x, 150 - barHeight, barWidth, barHeight);
+
+                // Draw label
+                ctx.fillStyle = '#2d3436';
+                ctx.font = '12px Inter';
+                ctx.textAlign = 'center';
+                ctx.fillText(bill.name, x + barWidth / 2, 170);
+                ctx.fillText('₹' + bill.amount, x + barWidth / 2, 185);
+
+                x += barWidth + spacing;
+            });
+
+            // Y-axis label
+            ctx.fillStyle = '#999';
+            ctx.font = '11px Inter';
+            ctx.textAlign = 'right';
+            ctx.fillText('₹3,500', 25, 35);
+            ctx.fillText('₹1,750', 25, 90);
+            ctx.fillText('₹0', 25, 150);
+        }
+
+        async function payBill(billType, amount) {
+            const confirmed = confirm(`Pay ${billType.toUpperCase()} bill of ₹${amount}?`);
+            if (confirmed) {
+                try {
+                    const response = await fetch(`${API_BASE_URL}/api/bills/pay`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ billType, amount })
+                    });
+
+                    if (response.ok) {
+                        alert('Bill paid successfully!');
+                    }
+                } catch (error) {
+                    alert('Payment failed. Please try again.');
+                }
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rewards - PayBill</title>
+    <link rel="stylesheet" href="styles/styles.css">
+<link rel="stylesheet" href="styles/billing-bg.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎁 Rewards & Points</h1>
+            <a href="dashboard.html">← Dashboard</a>
+        </div>
+
+        <div class="card mb-30">
+            <h2 class="text-center mb-20">Your Points Progress</h2>
+            <div class="canvas-container">
+                <canvas id="pointsCanvas" width="600" height="200"></canvas>
+            </div>
+            <h3 class="text-center mt-20">Total Points: <span class="text-primary" id="userPoints">2,450</span></h3>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <h3>🏆 Available Rewards</h3>
+                <div id="rewardsGrid" class="flex-col" style="gap: 15px;">
+                    <div class="p-20" style="background: rgba(102, 126, 234, 0.1); border-radius: 10px;">
+                        <h4>💰 ₹500 Amazon Card</h4>
+                        <p>Cost: 1,000 Points</p>
+                        <button onclick="redeemReward('Amazon Gift Card', 1000)" class="mt-10 btn-secondary">Redeem</button>
+                    </div>
+                    <div class="p-20" style="background: rgba(78, 205, 196, 0.1); border-radius: 10px;">
+                        <h4>📺 Netflix 1 Month</h4>
+                        <p>Cost: 800 Points</p>
+                        <button onclick="redeemReward('Netflix Subscription', 800)" class="mt-10 btn-secondary">Redeem</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>✨ Earn More Points</h3>
+                <div class="flex-col" style="gap: 15px;">
+                    <div class="p-20" style="background: rgba(255, 102, 107, 0.1); border-radius: 10px;">
+                        <p class="text-bold">Complete 5 transactions</p>
+                        <p class="mt-10"><span class="badge badge-primary">+100 pts</span> <span class="badge badge-success">✓ Done</span></p>
+                    </div>
+                    <div class="p-20" style="background: rgba(255, 165, 0, 0.1); border-radius: 10px;">
+                        <p class="text-bold">Refer a friend</p>
+                        <p class="mt-10"><span class="badge badge-primary">+200 pts</span> <span class="badge badge-warning">Pending</span></p>
+                    </div>
+                    <div class="p-20" style="background: rgba(102, 126, 234, 0.1); border-radius: 10px;">
+                        <p class="text-bold">Birthday bonus</p>
+                        <p class="mt-10"><span class="badge badge-primary">+50 pts</span> <span class="badge badge-success">✓ Done</span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="paymentResult" class="mt-20"></div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        const API_BASE_URL = 'http://localhost:5000';
+        let currentUser = null;
+        let currentUserId = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadUserData();
+            loadRewards();
+            drawPointsChart();
+        });
+
+        function loadUserData() {
+            const savedUser = localStorage.getItem('currentUser');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                currentUserId = currentUser._id;
+            }
+        }
+
+        async function loadRewards() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/rewards/${currentUserId}`);
+                const data = await response.json();
+                document.getElementById('userPoints').textContent = data.points.toLocaleString();
+            } catch (error) {
+                console.error('Error loading rewards:', error);
+            }
+        }
+
+        function drawPointsChart() {
+            const canvas = document.getElementById('pointsCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw background
+            const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+            gradient.addColorStop(0, 'rgba(102, 126, 234, 0.05)');
+            gradient.addColorStop(1, 'rgba(78, 205, 196, 0.05)');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw pie chart
+            const total = 2450;
+            const used = 1200;
+            const remaining = total - used;
+            
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = 60;
+
+            // Draw used points
+            ctx.fillStyle = '#667eea';
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY);
+            ctx.arc(centerX, centerY, radius, 0, (used / total) * Math.PI * 2);
+            ctx.lineTo(centerX, centerY);
+            ctx.fill();
+
+            // Draw remaining points
+            ctx.fillStyle = '#4ecdc4';
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY);
+            ctx.arc(centerX, centerY, radius, (used / total) * Math.PI * 2, Math.PI * 2);
+            ctx.lineTo(centerX, centerY);
+            ctx.fill();
+
+            // Labels
+            ctx.fillStyle = '#2d3436';
+            ctx.font = 'bold 16px Inter';
+            ctx.textAlign = 'center';
+            ctx.fillText('Points Distribution', centerX, 30);
+
+            ctx.font = '14px Inter';
+            ctx.fillText('Used: ' + used, centerX - 100, 140);
+            ctx.fillText('Remaining: ' + remaining, centerX + 100, 140);
+        }
+
+        async function redeemReward(rewardName, pointsRequired) {
+            if (confirm(`Redeem ${rewardName} for ${pointsRequired} points?`)) {
+                try {
+                    const response = await fetch(`${API_BASE_URL}/redeem-reward`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            userId: currentUserId,
+                            rewardName: rewardName,
+                            pointsRequired: pointsRequired
+                        })
+                    });
+
+                    const result = await response.json();
+                    alert(result.message);
+                    loadRewards();
+                } catch (error) {
+                    alert('Error redeeming reward');
+                }
+            }
+        }
+    </script>
+</body>
+</html>

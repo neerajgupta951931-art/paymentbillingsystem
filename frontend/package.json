@@ -1,0 +1,31 @@
+{
+  "name": "payment-billing-frontend",
+  "version": "1.0.0",
+  "description": "Frontend for Payment Billing System with modern UI/UX",
+  "main": "index.html",
+  "scripts": {
+    "start": "npm run dev",
+    "build": "npm run dev",
+    "dev": "start index.html"
+  },
+  "keywords": [
+    "payment",
+    "billing",
+    "frontend",
+    "ui",
+    "ux",
+    "javascript"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {},
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "browserslist": [
+    "last 2 versions",
+    "> 1%",
+    "not ie 11"
+  ]
+}

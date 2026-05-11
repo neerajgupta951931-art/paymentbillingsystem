@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile Recharge - PayBill</title>
+    <link rel="stylesheet" href="styles/styles.css">
+<link rel="stylesheet" href="styles/billing-bg.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📱 Mobile Recharge</h1>
+            <a href="dashboard.html">← Dashboard</a>
+        </div>
+
+        <div class="card mb-30">
+            <h3 class="mb-20">Enter Mobile Number</h3>
+            <div style="display: flex; gap: 10px;">
+                <input type="tel" id="mobileNumber" placeholder="Enter 10-digit mobile number" style="flex: 1; padding: 12px; border-radius: 8px; border: 1px solid #ddd;">
+                <button class="btn-primary" onclick="validateMobile()" style="padding: 12px 20px;">Check</button>
+            </div>
+            <div id="operatorInfo" style="background: rgba(102, 126, 234, 0.1); padding: 15px; border-radius: 10px; margin-top: 15px; display: none;">
+                <p style="margin: 0; color: #666;">Operator</p>
+                <p style="margin: 5px 0 0 0; font-weight: bold; font-size: 16px;" id="operatorName">-</p>
+            </div>
+        </div>
+
+        <div class="card mb-30">
+            <h3 class="mb-20">Recharge Plans</h3>
+            <div class="canvas-container">
+                <canvas id="plansCanvas" width="600" height="200"></canvas>
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <h3 class="mb-20 text-center">₹299 Plan</h3>
+                <p style="margin: 0; color: #666; font-size: 12px;">4G Data</p>
+                <p style="margin: 5px 0 10px 0; font-weight: bold;">50GB + Unlimited Calls</p>
+                <p style="margin: 0; color: #999; font-size: 12px;">Validity: 28 Days</p>
+                <button class="btn-primary mt-20" onclick="selectPlan(299)">Recharge Now</button>
+            </div>
+
+            <div class="card">
+                <h3 class="mb-20 text-center">₹399 Plan</h3>
+                <p style="margin: 0; color: #666; font-size: 12px;">4G Data</p>
+                <p style="margin: 5px 0 10px 0; font-weight: bold;">100GB + Unlimited Calls</p>
+                <p style="margin: 0; color: #999; font-size: 12px;">Validity: 28 Days</p>
+                <button class="btn-primary mt-20" onclick="selectPlan(399)">Recharge Now</button>
+            </div>
+
+            <div class="card">
+                <h3 class="mb-20 text-center">₹499 Plan</h3>
+                <p style="margin: 0; color: #666; font-size: 12px;">4G Data</p>
+                <p style="margin: 5px 0 10px 0; font-weight: bold;">150GB + Unlimited Calls</p>
+                <p style="margin: 0; color: #999; font-size: 12px;">Validity: 60 Days</p>
+                <button class="btn-primary mt-20" onclick="selectPlan(499)">Recharge Now</button>
+            </div>
+
+            <div class="card">
+                <h3 class="mb-20 text-center">₹599 Plan</h3>
+                <p style="margin: 0; color: #666; font-size: 12px;">4G Data</p>
+                <p style="margin: 5px 0 10px 0; font-weight: bold;">200GB + Unlimited Calls</p>
+                <p style="margin: 0; color: #999; font-size: 12px;">Validity: 90 Days</p>
+                <button class="btn-primary mt-20" onclick="selectPlan(599)">Recharge Now</button>
+            </div>
+        </div>
+
+        <div class="card mt-30">
+            <h3 class="mb-20">Recent Recharges</h3>
+            <div class="flex-col" style="gap: 10px;">
+                <div style="display: flex; justify-content: space-between; padding: 12px; background: #f5f5f5; border-radius: 8px;">
+                    <div>
+                        <p style="margin: 0; font-weight: bold;">+91 9999999999</p>
+                        <small style="color: #666;">2 days ago</small>
+                    </div>
+                    <p style="margin: 0; color: #4ecdc4; font-weight: bold;">✓ ₹499</p>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 12px; background: #f5f5f5; border-radius: 8px;">
+                    <div>
+                        <p style="margin: 0; font-weight: bold;">+91 9876543210</p>
+                        <small style="color: #666;">5 days ago</small>
+                    </div>
+                    <p style="margin: 0; color: #4ecdc4; font-weight: bold;">✓ ₹299</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            drawPlansChart();
+        });
+
+        function drawPlansChart() {
+            const canvas = document.getElementById('plansCanvas');
+            if (!canvas) return;
+
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Background
+            const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+            gradient.addColorStop(0, 'rgba(102, 126, 234, 0.05)');
+            gradient.addColorStop(1, 'rgba(78, 205, 196, 0.05)');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Plans
+            const plans = [
+                { price: '₹299', data: '50GB', color: '#667eea' },
+                { price: '₹399', data: '100GB', color: '#764ba2' },
+                { price: '₹499', data: '150GB', color: '#4ecdc4' },
+                { price: '₹599', data: '200GB', color: '#45b7d1' }
+            ];
+
+            const barWidth = 120;
+            const spacing = 30;
+            let x = 20;
+
+            plans.forEach((plan, i) => {
+                const dataGB = parseInt(plan.data);
+                const barHeight = (dataGB / 200) * 120;
+
+                // Draw bar
+                ctx.fillStyle = plan.color;
+                ctx.globalAlpha = 0.8;
+                ctx.fillRect(x, 150 - barHeight, barWidth, barHeight);
+                ctx.globalAlpha = 1;
+
+                // Draw label
+                ctx.fillStyle = '#2d3436';
+                ctx.font = 'bold 12px Inter';
+                ctx.textAlign = 'center';
+                ctx.fillText(plan.price, x + barWidth / 2, 170);
+                ctx.fillText(plan.data, x + barWidth / 2, 185);
+
+                x += barWidth + spacing;
+            });
+        }
+
+        function validateMobile() {
+            const mobile = document.getElementById('mobileNumber').value;
+            if (mobile.length === 10) {
+                document.getElementById('operatorInfo').style.display = 'block';
+                document.getElementById('operatorName').textContent = 'Jio (Reliance)';
+            } else {
+                alert('Please enter a valid 10-digit number');
+            }
+        }
+
+        function selectPlan(amount) {
+            const mobile = document.getElementById('mobileNumber').value;
+            if (!mobile) {
+                alert('Please enter mobile number first');
+                return;
+            }
+
+            if (!confirm(`Recharge ₹${amount} for ${mobile}?`)) return;
+
+            let userId = null;
+            try {
+                const user = JSON.parse(localStorage.getItem('currentUser'));
+                if (user && (user._id || user.id)) {
+                    userId = user._id || user.id;
+                }
+            } catch (err) {}
+
+            fetch('http://localhost:5000/api/recharge', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    userId, 
+                    mobile, 
+                    operator: 'Jio (Reliance)', 
+                    circle: 'India', 
+                    amount: amount, 
+                    plan: 'Mobile Recharge' 
+                })
+            })
+            .then(response => {
+                if(!response.ok) return response.text().then(text => {throw new Error(text)});
+                return response.json();
+            })
+            .then(data => {
+                alert(`Recharge of ₹${amount} for ${mobile} initiated successfully!`);
+                window.location = 'dashboard.html';
+            })
+            .catch(err => {
+                console.error(err);
+                alert('Recharge failed: ' + (err.message || 'Please try again.'));
+            });
+        }
+    </script>
+</body>
+
+</html>

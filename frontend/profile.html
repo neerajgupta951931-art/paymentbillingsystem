@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile - PayBill</title>
+    <link rel="stylesheet" href="styles/styles.css">
+<link rel="stylesheet" href="styles/billing-bg.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>👤 User Profile</h1>
+            <a href="dashboard.html">← Dashboard</a>
+        </div>
+
+        <div class="grid" style="grid-template-columns: 1fr 1.5fr; gap: 30px; margin-bottom: 30px;">
+            <div class="card">
+                <h3 class="text-center mb-20">Profile Avatar</h3>
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <canvas id="avatarCanvas" width="150" height="150" style="border-radius: 50%; border: 3px solid #667eea; background: linear-gradient(135deg, #667eea, #764ba2);"></canvas>
+                </div>
+                <h3 class="text-center" id="userName">John Doe</h3>
+                <p class="text-center text-secondary">Premium Member</p>
+            </div>
+
+            <div class="card">
+                <h3 class="mb-20">Profile Information</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div style="background: rgba(102, 126, 234, 0.1); padding: 15px; border-radius: 10px;">
+                        <p style="margin: 0; color: #666; font-size: 12px;">Full Name</p>
+                        <p style="margin: 5px 0 0 0; font-weight: bold;" id="fullName">John Doe</p>
+                    </div>
+                    <div style="background: rgba(78, 205, 196, 0.1); padding: 15px; border-radius: 10px;">
+                        <p style="margin: 0; color: #666; font-size: 12px;">Member Since</p>
+                        <p style="margin: 5px 0 0 0; font-weight: bold;">2024</p>
+                    </div>
+                    <div style="background: rgba(255, 107, 107, 0.1); padding: 15px; border-radius: 10px;">
+                        <p style="margin: 0; color: #666; font-size: 12px;">Email</p>
+                        <p style="margin: 5px 0 0 0; font-weight: bold; font-size: 12px;" id="userEmail">john@example.com</p>
+                    </div>
+                    <div style="background: rgba(102, 126, 234, 0.1); padding: 15px; border-radius: 10px;">
+                        <p style="margin: 0; color: #666; font-size: 12px;">Mobile</p>
+                        <p style="margin: 5px 0 0 0; font-weight: bold;" id="userMobile">+91 9999999999</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-30">
+            <h3 class="mb-20">Account Statistics</h3>
+            <div class="canvas-container">
+                <canvas id="statsCanvas" width="600" height="250"></canvas>
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <h3 class="mb-20">⚙️ Account Settings</h3>
+                <div class="flex-col" style="gap: 10px;">
+                    <button class="btn-secondary" onclick="editProfile()">✏️ Edit Profile</button>
+                    <button class="btn-secondary" onclick="changePassword()">🔐 Change Password</button>
+                    <button class="btn-secondary" onclick="notificationSettings()">🔔 Notification Settings</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 class="mb-20">🛡️ Security</h3>
+                <div class="flex-col" style="gap: 10px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span>Two-Factor Authentication</span>
+                        <span style="background: #4ecdc4; color: white; padding: 4px 10px; border-radius: 15px; font-size: 12px;">Enabled</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span>Biometric Login</span>
+                        <span style="background: #667eea; color: white; padding: 4px 10px; border-radius: 15px; font-size: 12px;">Active</span>
+                    </div>
+                    <button class="btn-secondary mt-10" onclick="viewLoginHistory()">📜 Login History</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 class="mb-20">💳 Payment Methods</h3>
+                <div class="flex-col" style="gap: 10px;">
+                    <div style="background: rgba(102, 126, 234, 0.1); padding: 12px; border-radius: 8px;">
+                        <p style="margin: 0; font-weight: bold;">Visa Card</p>
+                        <p style="margin: 3px 0; font-size: 12px;">**** **** **** 4242</p>
+                    </div>
+                    <button class="btn-secondary" onclick="addPaymentMethod()">➕ Add Method</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 class="mb-20">🚪 Session Management</h3>
+                <div class="flex-col" style="gap: 10px;">
+                    <button class="btn-secondary" onclick="logoutAll()">🔚 Logout All Devices</button>
+                    <button class="btn-secondary" onclick="viewSessions()">📱 Active Sessions</button>
+                    <button class="btn-danger" style="margin-top: 10px;" onclick="deleteAccount()">❌ Delete Account</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mt-30"></div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        const API_BASE_URL = 'http://localhost:5000';
+
+        document.addEventListener('DOMContentLoaded', function() {
+            drawAvatarCanvas();
+            drawStatsChart();
+            loadProfileData();
+        });
+
+        function drawAvatarCanvas() {
+            const canvas = document.getElementById('avatarCanvas');
+            const ctx = canvas.getContext('2d');
+
+            // Draw gradient background
+            const gradient = ctx.createLinearGradient(0, 0, 150, 150);
+            gradient.addColorStop(0, '#667eea');
+            gradient.addColorStop(1, '#764ba2');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, 150, 150);
+
+            // Draw initials or avatar
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 48px Inter';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('JD', 75, 75);
+        }
+
+        function drawStatsChart() {
+            const canvas = document.getElementById('statsCanvas');
+            if (!canvas) return;
+            
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Background gradient
+            const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+            gradient.addColorStop(0, 'rgba(102, 126, 234, 0.05)');
+            gradient.addColorStop(1, 'rgba(118, 75, 162, 0.05)');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Stats data
+            const stats = [
+                { label: 'Transactions', value: 156, color: '#667eea' },
+                { label: 'Total Spent', value: 45000, color: '#764ba2' },
+                { label: 'Rewards Earned', value: 2450, color: '#4ecdc4' },
+                { label: 'Accounts Linked', value: 3, color: '#45b7d1' }
+            ];
+
+            // Draw stat cards
+            const cardWidth = 130;
+            const cardHeight = 100;
+            const spacing = 20;
+            let x = 20;
+
+            stats.forEach((stat, i) => {
+                // Draw card background
+                ctx.fillStyle = stat.color;
+                ctx.globalAlpha = 0.1;
+                ctx.fillRect(x, 40, cardWidth, cardHeight);
+                ctx.globalAlpha = 1;
+
+                // Draw card border
+                ctx.strokeStyle = stat.color;
+                ctx.lineWidth = 2;
+                ctx.strokeRect(x, 40, cardWidth, cardHeight);
+
+                // Draw stat value
+                ctx.fillStyle = stat.color;
+                ctx.font = 'bold 20px Inter';
+                ctx.textAlign = 'center';
+                ctx.fillText(stat.value, x + cardWidth / 2, 75);
+
+                // Draw stat label
+                ctx.fillStyle = '#666';
+                ctx.font = '12px Inter';
+                ctx.fillText(stat.label, x + cardWidth / 2, 105);
+
+                x += cardWidth + spacing;
+            });
+        }
+
+        async function loadProfileData() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/profile`, {
+                    headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
+                });
+
+                if (response.ok) {
+                    const user = await response.json();
+                    document.getElementById('userName').textContent = user.name || 'User';
+                    document.getElementById('fullName').textContent = user.name || 'John Doe';
+                    document.getElementById('userEmail').textContent = user.email || 'user@example.com';
+                    document.getElementById('userMobile').textContent = user.mobile || '+91 9999999999';
+                }
+            } catch (error) {
+                console.error('Error loading profile:', error);
+            }
+        }
+
+        function editProfile() {
+            alert('Edit profile feature coming soon!');
+        }
+
+        function changePassword() {
+            alert('Change password feature coming soon!');
+        }
+
+        function notificationSettings() {
+            alert('Notification settings coming soon!');
+        }
+
+        function viewLoginHistory() {
+            alert('Login history feature coming soon!');
+        }
+
+        function addPaymentMethod() {
+            alert('Add payment method feature coming soon!');
+        }
+
+        function logoutAll() {
+            if (confirm('Logout from all devices?')) {
+                alert('All sessions ended');
+            }
+        }
+
+        function viewSessions() {
+            alert('Active sessions: 1 device');
+        }
+
+        function deleteAccount() {
+            if (confirm('Are you sure? This action cannot be undone!')) {
+                alert('Account deletion request submitted');
+            }
+        }
+    </script>
+</body>
+</html>
+
+<style>
+
+body{
+margin:0;
+font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+background:linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+color:white;
+min-height:100vh;
+padding:20px;
+position:relative;
+overflow-x:hidden;
+}
+
+body::before{
+content:'';
+position:absolute;
+top:0;
+left:0;
+right:0;
+bottom:0;
+background:radial-gradient(circle at 20% 80%, rgba(138, 43, 226, 0.1) 0%, transparent 50%),
+            radial-gradient(circle at 80% 20%, rgba(30, 144, 255, 0.1) 0%, transparent 50%);
+pointer-events:none;
+}
+
+h2{
+color:#ffd700;
+margin-bottom:30px;
+font-size:2.5em;
+text-shadow:0 0 20px rgba(255, 215, 0, 0.5);
+display:flex;
+align-items:center;
+justify-content:center;
+gap:15px;
+animation: glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes glow {
+from { text-shadow:0 0 20px rgba(255, 215, 0, 0.5); }
+to { text-shadow:0 0 30px rgba(255, 215, 0, 0.8), 0 0 40px rgba(255, 215, 0, 0.3); }
+}
+
+.profile-container{
+display:grid;
+grid-template-columns:1fr 2fr;
+gap:30px;
+max-width:1200px;
+margin:0 auto;
+align-items:start;
+}
+
+.profile-card{
+background:linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+backdrop-filter:blur(20px);
+padding:40px;
+border-radius:25px;
+box-shadow:0 20px 40px rgba(0,0,0,0.3),
+           inset 0 1px 0 rgba(255,255,255,0.2);
+border:1px solid rgba(255,255,255,0.1);
+position:relative;
+}
+
+.profile-card::before{
+content:'';
+position:absolute;
+top:0;
+left:0;
+right:0;
+bottom:0;
+background:linear-gradient(45deg, transparent, rgba(138, 43, 226, 0.1), transparent);
+border-radius:25px;
+pointer-events:none;
+}
+
+.avatar-section{
+text-align:center;
+margin-bottom:30px;
+}
+
+.avatar-canvas{
+width:150px;
+height:150px;
+border-radius:50%;
+border:5px solid #ffd700;
+box-shadow:0 0 30px rgba(255, 215, 0, 0.3);
+margin:0 auto 20px;
+display:block;
+background:linear-gradient(45deg, #1e3c72, #2a5298);
+}
+
+.avatar-placeholder{
+font-size:4em;
+color:#ffd700;
+}
+
+.info-grid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:20px;
+}
+
+.info-item{
+background:linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+padding:20px;
+border-radius:15px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+transition:all 0.3s ease;
+border:1px solid rgba(255,255,255,0.1);
+}
+
+.info-item:hover{
+transform:translateY(-2px);
+background:linear-gradient(145deg, rgba(255,255,255,0.15), rgba(255,255,255,0.08));
+box-shadow:0 10px 25px rgba(0,0,0,0.2);
+}
+
+.info-item span:first-child{
+font-weight:600;
+color:#00d4ff;
+display:flex;
+align-items:center;
+gap:10px;
+}
+
+.info-item span:last-child{
+color:#ffd700;
+font-weight:500;
+}
+
+.stats-section{
+background:linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+backdrop-filter:blur(20px);
+padding:30px;
+border-radius:25px;
+box-shadow:0 20px 40px rgba(0,0,0,0.3);
+border:1px solid rgba(255,255,255,0.1);
+}
+
+.stats-section h3{
+color:#ffd700;
+margin-bottom:20px;
+text-align:center;
+font-size:1.5em;
+}
+
+.chart-container{
+position:relative;
+height:300px;
+margin:20px 0;
+}
+
+#statsCanvas{
+width:100% !important;
+height:100% !important;
+border-radius:15px;
+}
+
+.back-btn{
+position:fixed;
+top:20px;
+left:20px;
+background:linear-gradient(45deg, #8a2be2, #4169e1);
+color:white;
+border:none;
+padding:15px 25px;
+border-radius:15px;
+cursor:pointer;
+font-weight:bold;
+font-size:16px;
+box-shadow:0 8px 20px rgba(138, 43, 226, 0.3);
+transition:all 0.3s ease;
+z-index:1000;
+}
+
+.back-btn:hover{
+transform:translateY(-2px);
+box-shadow:0 12px 25px rgba(138, 43, 226, 0.4);
+background:linear-gradient(45deg, #9932cc, #4682b4);
+}
+
+.edit-btn{
+background:linear-gradient(45deg, #ffd700, #ffa500);
+color:#1a1a2e;
+border:none;
+padding:12px 25px;
+border-radius:12px;
+cursor:pointer;
+font-weight:bold;
+margin-top:20px;
+transition:all 0.3s ease;
+}
+
+.edit-btn:hover{
+transform:translateY(-2px);
+box-shadow:0 8px 20px rgba(255, 215, 0, 0.3);
+}
+
+@media (max-width:768px){
+.profile-container{
+grid-template-columns:1fr;
+}
+.info-grid{
+grid-template-columns:1fr;
+}
+h2{
+font-size:2em;
+}
+}
+
+</style>
+
+<link rel="stylesheet" href="styles/billing-bg.css">
+</head>
+
+<body>
+
+<button class="back-btn" onclick="goBack()">←</button>
+
+<h2>👑 Royal Profile</h2>
+
+<div class="profile-container">
+
+<div class="profile-card">
+
+<div class="avatar-section">
+<canvas id="avatarCanvas" class="avatar-canvas"></canvas>
+<h3 style="color:#ffd700;margin:10px 0;">John Doe</h3>
+<p style="color:#00d4ff;margin:0;">Premium Member</p>
+</div>
+
+<div class="info-grid">
+
+<div class="info-item">
+<span>📱 Mobile:</span>
+<span id="mobile">Loading...</span>
+</div>
+
+<div class="info-item">
+<span>👤 Full Name:</span>
+<span id="name">Loading...</span>
+</div>
+
+<div class="info-item">
+<span>🏠 Address:</span>
+<span id="address">Loading...</span>
+</div>
+
+<div class="info-item">
+<span>💰 Balance:</span>
+<span id="balance">₹0</span>
+</div>
+
+<div class="info-item">
+<span>🏦 Bank:</span>
+<span id="bank">Loading...</span>
+</div>
+
+<div class="info-item">
+<span>💳 UPI ID:</span>
+<span id="upi">Loading...</span>
+</div>
+
+</div>
+
+<button class="edit-btn" onclick="editProfile()">✏️ Edit Profile</button>
+
+</div>
+
+<div class="stats-section">
+
+<h3>📊 Account Statistics</h3>
+
+<div class="chart-container">
+<canvas id="statsCanvas"></canvas>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:20px;">
+<div style="text-align:center;">
+<h4 style="color:#ffd700;margin:0;">156</h4>
+<p style="color:#00d4ff;margin:5px 0 0 0;">Transactions</p>
+</div>
+<div style="text-align:center;">
+<h4 style="color:#ffd700;margin:0;">₹45,230</h4>
+<p style="color:#00d4ff;margin:5px 0 0 0;">Total Spent</p>
+</div>
+<div style="text-align:center;">
+<h4 style="color:#ffd700;margin:0;">23</h4>
+<p style="color:#00d4ff;margin:5px 0 0 0;">Rewards Earned</p>
+</div>
+</div>
+
+</div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+
+function goBack(){
+window.location = 'dashboard.html';
+}
+
+function editProfile(){
+alert('Edit profile feature coming soon!');
+}
+
+// Load user data
+window.onload = function(){
+const mobile = localStorage.getItem('mobile') || '+91 9876543210';
+document.getElementById('mobile').textContent = mobile;
+
+// Mock data for demo
+document.getElementById('name').textContent = 'John Doe';
+document.getElementById('address').textContent = '123 Royal Palace, Mumbai, MH 400001';
+document.getElementById('balance').textContent = '₹2,450';
+document.getElementById('bank').textContent = 'SBI - XXXX1234';
+document.getElementById('upi').textContent = 'john@royalpay';
+
+// Initialize avatar canvas
+initAvatarCanvas();
+
+// Initialize stats chart
+initStatsChart();
+};
+
+function initAvatarCanvas(){
+const canvas = document.getElementById('avatarCanvas');
+const ctx = canvas.getContext('2d');
+
+// Create gradient background
+const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+gradient.addColorStop(0, '#1e3c72');
+gradient.addColorStop(1, '#2a5298');
+
+ctx.fillStyle = gradient;
+ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+// Draw crown
+ctx.fillStyle = '#ffd700';
+ctx.beginPath();
+ctx.moveTo(canvas.width/2 - 30, canvas.height/2 - 20);
+ctx.lineTo(canvas.width/2 - 20, canvas.height/2 - 40);
+ctx.lineTo(canvas.width/2 - 10, canvas.height/2 - 20);
+ctx.lineTo(canvas.width/2, canvas.height/2 - 50);
+ctx.lineTo(canvas.width/2 + 10, canvas.height/2 - 20);
+ctx.lineTo(canvas.width/2 + 20, canvas.height/2 - 40);
+ctx.lineTo(canvas.width/2 + 30, canvas.height/2 - 20);
+ctx.closePath();
+ctx.fill();
+
+// Draw user icon
+ctx.fillStyle = '#ffffff';
+ctx.beginPath();
+ctx.arc(canvas.width/2, canvas.height/2 + 10, 25, 0, Math.PI * 2);
+ctx.fill();
+
+// Draw body
+ctx.beginPath();
+ctx.ellipse(canvas.width/2, canvas.height/2 + 45, 20, 30, 0, 0, Math.PI * 2);
+ctx.fill();
+}
+
+function initStatsChart(){
+const ctx = document.getElementById('statsCanvas').getContext('2d');
+
+new Chart(ctx, {
+type: 'line',
+data: {
+labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+datasets: [{
+label: 'Monthly Transactions',
+data: [12, 19, 15, 25, 22, 30],
+borderColor: '#ffd700',
+backgroundColor: 'rgba(255, 215, 0, 0.1)',
+borderWidth: 3,
+fill: true,
+tension: 0.4,
+pointBackgroundColor: '#ffd700',
+pointBorderColor: '#fff',
+pointBorderWidth: 2,
+pointRadius: 6
+}]
+},
+options: {
+responsive: true,
+maintainAspectRatio: false,
+plugins: {
+legend: {
+labels: {
+color: '#00d4ff',
+font: {
+size: 14,
+weight: 'bold'
+}
+}
+}
+},
+scales: {
+x: {
+grid: {
+color: 'rgba(255, 255, 255, 0.1)'
+},
+ticks: {
+color: '#00d4ff'
+}
+},
+y: {
+grid: {
+color: 'rgba(255, 255, 255, 0.1)'
+},
+ticks: {
+color: '#00d4ff'
+}
+}
+}
+}
+});
+}
+
+</script>
+
+</body>
+
+</html>

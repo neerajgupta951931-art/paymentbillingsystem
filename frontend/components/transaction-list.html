@@ -1,0 +1,66 @@
+<!-- Reusable Transaction List Component -->
+<!-- Usage: Include this file and call createTransactionList(containerId, transactions) -->
+<div id="transactionContainer" style="display: none;">
+    <h3 class="mb-20">Recent Transactions</h3>
+    <div id="transactionList" class="flex-col" style="gap: 10px;">
+        <!-- Transactions will be inserted here -->
+        <div id="transactions"></div>
+    </div>
+</div>
+
+<script>
+    function createTransactionList(containerId, transactions = []) {
+        const container = document.getElementById('transactionContainer');
+        const list = document.getElementById('transactionList');
+
+        if (container) container.style.display = 'block';
+        if (list) {
+            list.innerHTML = '';
+
+            if (transactions.length === 0) {
+                list.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">No transactions found</p>';
+                return;
+            }
+
+            transactions.forEach(transaction => {
+                const transactionElement = document.createElement('div');
+                transactionElement.style.cssText = `
+                display: flex;
+                justify-content: space-between;
+                padding: 12px;
+                background: #f5f5f5;
+                border-radius: 8px;
+                align-items: center;
+            `;
+
+                transactionElement.innerHTML = `
+                <div>
+                    <p style="margin: 0; font-weight: bold;">${transaction.description || 'Transaction'}</p>
+                    <small style="color: #666;">${transaction.time || transaction.date || 'N/A'}</small>
+                </div>
+                <p style="margin: 0; color: ${transaction.amount >= 0 ? '#4ecdc4' : '#ff6b6b'}; font-weight: bold;">
+                    ${transaction.amount >= 0 ? '+' : ''}₹${Math.abs(transaction.amount || 0).toFixed(2)}
+                </p>
+            `;
+
+                list.appendChild(transactionElement);
+            });
+        }
+    }
+
+    // Auto-create transaction list if data attributes are present
+    document.addEventListener('DOMContentLoaded', function () {
+        const container = document.getElementById('transactionContainer');
+        if (container) {
+            const dataAttr = container.getAttribute('data-transactions');
+            if (dataAttr) {
+                try {
+                    const transactions = JSON.parse(dataAttr);
+                    createTransactionList('transactionContainer', transactions);
+                } catch (e) {
+                    console.error('Invalid transaction data:', e);
+                }
+            }
+        }
+    });
+</script>

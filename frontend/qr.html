@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code Payment - PayBill</title>
+    <link rel="stylesheet" href="styles/styles.css">
+<link rel="stylesheet" href="styles/billing-bg.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📲 QR Code Payment</h1>
+            <a href="dashboard.html">← Dashboard</a>
+        </div>
+
+        <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 30px;">
+            <div class="card">
+                <h3 class="text-center mb-20">Your QR Code</h3>
+                <div class="canvas-container" style="display: flex; justify-content: center;">
+                    <canvas id="qrCanvas" width="200" height="200"></canvas>
+                </div>
+                <p class="text-center mt-20">UPI ID: <strong>john@paybill</strong></p>
+                <p class="text-center">Amount: <strong id="qrAmount">Any</strong></p>
+                <button class="btn-secondary mt-15" onclick="downloadQR()">📥 Download QR</button>
+            </div>
+
+            <div class="card">
+                <h3 class="mb-20">Generate Custom QR</h3>
+                <div class="flex-col" style="gap: 15px;">
+                    <div>
+                        <label for="upiId">UPI ID</label>
+                        <input type="text" id="upiId" placeholder="your@paybill" value="john@paybill">
+                    </div>
+                    <div>
+                        <label for="fixedAmount">Fixed Amount (Optional)</label>
+                        <input type="number" id="fixedAmount" placeholder="Leave blank for any amount">
+                    </div>
+                    <div>
+                        <label for="qrName">Name</label>
+                        <input type="text" id="qrName" placeholder="Your Name" value="John Doe">
+                    </div>
+                    <button class="btn-primary" onclick="generateQR()">Generate QR</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3 class="mb-20">📊 Payment Stats</h3>
+            <div class="canvas-container">
+                <canvas id="statsCanvas" width="600" height="200"></canvas>
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <h3 class="mb-20">💰 Received Payments</h3>
+                <div class="flex-col" style="gap: 10px;">
+                    <div style="display: flex; justify-content: space-between; padding: 12px; background: #f5f5f5; border-radius: 8px;">
+                        <div>
+                            <p style="margin: 0; font-weight: bold;">Payment from Raj</p>
+                            <small style="color: #666;">5 mins ago</small>
+                        </div>
+                        <p style="margin: 0; color: #4ecdc4; font-weight: bold;">+₹500</p>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 12px; background: #f5f5f5; border-radius: 8px;">
+                        <div>
+                            <p style="margin: 0; font-weight: bold;">Payment from Priya</p>
+                            <small style="color: #666;">2 hours ago</small>
+                        </div>
+                        <p style="margin: 0; color: #4ecdc4; font-weight: bold;">+₹1,000</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 class="mb-20">📈 Quick Stats</h3>
+                <div class="flex-col" style="gap: 10px;">
+                    <div style="background: rgba(102, 126, 234, 0.1); padding: 15px; border-radius: 10px;">
+                        <p style="margin: 0; color: #666; font-size: 12px;">Today's Payments</p>
+                        <p style="margin: 5px 0 0 0; font-size: 24px; font-weight: bold; color: #667eea;">₹2,500</p>
+                    </div>
+                    <div style="background: rgba(78, 205, 196, 0.1); padding: 15px; border-radius: 10px;">
+                        <p style="margin: 0; color: #666; font-size: 12px;">Total Received</p>
+                        <p style="margin: 5px 0 0 0; font-size: 24px; font-weight: bold; color: #4ecdc4;">₹25,450</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            generateQR();
+            drawStatsChart();
+        });
+
+        function generateQR() {
+            const canvas = document.getElementById('qrCanvas');
+            const ctx = canvas.getContext('2d');
+
+            ctx.clearRect(0, 0, 200, 200);
+
+            // Draw QR pattern (simplified)
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(0, 0, 200, 200);
+
+            // Draw finder patterns
+            drawFinderPattern(ctx, 0, 0);
+            drawFinderPattern(ctx, 150, 0);
+            drawFinderPattern(ctx, 0, 150);
+
+            // Draw data pattern
+            ctx.fillStyle = '#2d3436';
+            for (let i = 0; i < 100; i++) {
+                if (Math.random() > 0.5) {
+                    const x = Math.random() * 200;
+                    const y = Math.random() * 200;
+                    ctx.fillRect(x, y, 2, 2);
+                }
+            }
+
+            const amount = document.getElementById('fixedAmount').value;
+            document.getElementById('qrAmount').textContent = amount || 'Any';
+        }
+
+        function drawFinderPattern(ctx, x, y) {
+            // Outer square
+            ctx.fillStyle = '#2d3436';
+            ctx.fillRect(x, y, 50, 50);
+
+            // Middle square
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(x + 5, y + 5, 40, 40);
+
+            // Inner square
+            ctx.fillStyle = '#2d3436';
+            ctx.fillRect(x + 10, y + 10, 30, 30);
+        }
+
+        function drawStatsChart() {
+            const canvas = document.getElementById('statsCanvas');
+            if (!canvas) return;
+
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Background
+            const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+            gradient.addColorStop(0, 'rgba(102, 126, 234, 0.05)');
+            gradient.addColorStop(1, 'rgba(78, 205, 196, 0.05)');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Chart title
+            ctx.fillStyle = '#2d3436';
+            ctx.font = 'bold 14px Inter';
+            ctx.textAlign = 'left';
+            ctx.fillText('Payments Received (Last 7 Days)', 20, 25);
+
+            // Chart data
+            const data = [150, 300, 200, 450, 350, 500, 400];
+            const barWidth = 60;
+            const spacing = 20;
+            let x = 30;
+
+            data.forEach((value, i) => {
+                const barHeight = (value / 500) * 120;
+
+                ctx.fillStyle = '#4ecdc4';
+                ctx.globalAlpha = 0.7;
+                ctx.fillRect(x, 150 - barHeight, barWidth, barHeight);
+                ctx.globalAlpha = 1;
+
+                ctx.fillStyle = '#999';
+                ctx.font = '10px Inter';
+                ctx.textAlign = 'center';
+                ctx.fillText('Day ' + (i + 1), x + barWidth / 2, 170);
+
+                x += barWidth + spacing;
+            });
+        }
+
+        function downloadQR() {
+            alert('QR code download feature coming soon!');
+        }
+    </script>
+</body>
+</html>
+<html>
+
+<head>
+
+<title>QR Code Generator</title>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+}
+
+body{
+margin:0;
+font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+background:linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+color:white;
+min-height:100vh;
+display:flex;
+align-items:center;
+justify-content:center;
+padding:20px;
+position:relative;
+overflow-x:hidden;
+}
+
+body::before{
+content:'';
+position:fixed;
+top:0;
+left:0;
+right:0;
+bottom:0;
+background:
+radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
+radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.3) 0%, transparent 50%);
+pointer-events:none;
+z-index:-1;
+}
+
+.container{
+background:rgba(255,255,255,0.1);
+backdrop-filter:blur(20px);
+border-radius:25px;
+padding:40px;
+width:100%;
+max-width:500px;
+box-shadow:0 25px 50px rgba(0,0,0,0.3);
+border:1px solid rgba(255,255,255,0.2);
+position:relative;
+overflow:hidden;
+}
+
+.container::before{
+content:'';
+position:absolute;
+top:0;
+left:0;
+right:0;
+bottom:0;
+background:linear-gradient(45deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+border-radius:25px;
+}
+
+h2{
+color:#fff;
+margin-bottom:30px;
+font-size:28px;
+text-shadow:0 2px 4px rgba(0,0,0,0.3);
+display:flex;
+align-items:center;
+justify-content:center;
+gap:15px;
+position:relative;
+z-index:2;
+}
+
+.form-group{
+margin-bottom:25px;
+position:relative;
+z-index:2;
+}
+
+label{
+display:block;
+margin-bottom:8px;
+font-weight:600;
+color:#00d4ff;
+font-size:14px;
+text-transform:uppercase;
+letter-spacing:1px;
+}
+
+input, select{
+width:100%;
+padding:18px 20px;
+border:none;
+border-radius:15px;
+background:rgba(255,255,255,0.15);
+color:white;
+font-size:16px;
+font-weight:500;
+box-sizing:border-box;
+transition:all 0.3s ease;
+backdrop-filter:blur(10px);
+border:1px solid rgba(255,255,255,0.1);
+}
+
+input::placeholder{
+color:rgba(255,255,255,0.6);
+font-weight:400;
+}
+
+input:focus, select:focus{
+outline:none;
+background:rgba(255,255,255,0.25);
+box-shadow:0 0 0 3px rgba(0,212,255,0.3);
+transform:translateY(-2px);
+border-color:rgba(0,212,255,0.5);
+}
+
+.qr-section{
+text-align:center;
+margin:30px 0;
+position:relative;
+z-index:2;
+}
+
+.qr-container{
+background:white;
+padding:25px;
+border-radius:20px;
+display:inline-block;
+box-shadow:0 10px 30px rgba(0,0,0,0.2);
+margin:20px 0;
+position:relative;
+overflow:hidden;
+}
+
+.qr-container::before{
+content:'';
+position:absolute;
+top:0;
+left:0;
+right:0;
+bottom:0;
+background:linear-gradient(135deg, rgba(255,255,255,0.9), rgba(255,255,255,0.95));
+}
+
+#q{
+width:250px !important;
+height:250px !important;
+border-radius:15px;
+box-shadow:0 5px 15px rgba(0,0,0,0.1);
+position:relative;
+z-index:1;
+}
+
+.qr-placeholder{
+width:250px;
+height:250px;
+background:linear-gradient(135deg, #f0f0f0, #e0e0e0);
+border-radius:15px;
+display:flex;
+align-items:center;
+justify-content:center;
+color:#666;
+font-size:16px;
+font-weight:500;
+border:2px dashed #ccc;
+margin:0 auto;
+}
+
+.button-group{
+display:flex;
+gap:15px;
+justify-content:center;
+flex-wrap:wrap;
+margin-top:30px;
+position:relative;
+z-index:2;
+}
+
+.btn{
+padding:15px 25px;
+border:none;
+border-radius:15px;
+font-size:16px;
+font-weight:600;
+cursor:pointer;
+transition:all 0.3s ease;
+text-transform:uppercase;
+letter-spacing:1px;
+min-width:140px;
+position:relative;
+overflow:hidden;
+}
+
+.btn::before{
+content:'';
+position:absolute;
+top:0;
+left:-100%;
+width:100%;
+height:100%;
+background:linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+transition:all 0.5s ease;
+}
+
+.btn:hover::before{
+left:100%;
+}
+
+.btn-primary{
+background:linear-gradient(135deg, #00d4ff, #0099cc);
+color:white;
+box-shadow:0 8px 25px rgba(0,212,255,0.3);
+}
+
+.btn-primary:hover{
+transform:translateY(-3px);
+box-shadow:0 12px 35px rgba(0,212,255,0.4);
+}
+
+.btn-secondary{
+background:linear-gradient(135deg, #4CAF50, #45a049);
+color:white;
+box-shadow:0 8px 25px rgba(76,175,80,0.3);
+}
+
+.btn-secondary:hover{
+transform:translateY(-3px);
+box-shadow:0 12px 35px rgba(76,175,80,0.4);
+}
+
+.btn-outline{
+background:transparent;
+color:#00d4ff;
+border:2px solid #00d4ff;
+box-shadow:0 8px 25px rgba(0,212,255,0.1);
+}
+
+.btn-outline:hover{
+background:#00d4ff;
+color:white;
+transform:translateY(-3px);
+box-shadow:0 12px 35px rgba(0,212,255,0.3);
+}
+
+.loading{
+display:none;
+color:#00d4ff;
+font-size:14px;
+margin-top:15px;
+font-weight:500;
+}
+
+.success-message{
+background:linear-gradient(135deg, #4CAF50, #45a049);
+color:white;
+padding:15px;
+border-radius:12px;
+margin-top:20px;
+font-weight:500;
+display:none;
+animation:slideIn 0.5s ease;
+}
+
+.error-message{
+background:linear-gradient(135deg, #ff6b6b, #ee5a52);
+color:white;
+padding:15px;
+border-radius:12px;
+margin-top:20px;
+font-weight:500;
+display:none;
+animation:slideIn 0.5s ease;
+}
+
+@keyframes slideIn{
+from{
+opacity:0;
+transform:translateY(-10px);
+}
+to{
+opacity:1;
+transform:translateY(0);
+}
+}
+
+.back-btn{
+position:absolute;
+top:20px;
+left:20px;
+background:rgba(255,255,255,0.2);
+color:white;
+border:none;
+padding:12px 18px;
+border-radius:12px;
+cursor:pointer;
+backdrop-filter:blur(10px);
+transition:all 0.3s ease;
+font-size:14px;
+font-weight:500;
+z-index:10;
+}
+
+.back-btn:hover{
+background:rgba(255,255,255,0.3);
+transform:scale(1.05);
+box-shadow:0 5px 15px rgba(0,0,0,0.2);
+}
+
+@media (max-width:600px){
+.container{
+padding:30px 20px;
+margin:20px;
+}
+
+h2{
+font-size:24px;
+}
+
+#q{
+width:200px !important;
+height:200px !important;
+}
+
+.qr-placeholder{
+width:200px;
+height:200px;
+}
+
+.button-group{
+flex-direction:column;
+align-items:center;
+}
+
+.btn{
+width:100%;
+max-width:250px;
+}
+}
+
+</style>
+
+<link rel="stylesheet" href="styles/billing-bg.css">
+</head>
+
+<body>
+
+<button class="back-btn" onclick="goBack()">←</button>
+
+<div class="container">
+
+<h2>📱 QR Code Generator</h2>
+
+<div class="form-group">
+<label for="upi">UPI ID</label>
+<input type="text" id="upi" placeholder="Enter UPI ID (e.g., user@upi)" required>
+</div>
+
+<div class="form-group">
+<label for="amount">Amount (Optional)</label>
+<input type="number" id="amount" placeholder="Enter amount in ₹" min="1" step="0.01">
+</div>
+
+<div class="qr-section">
+<div class="qr-container">
+<div class="qr-placeholder" id="qrPlaceholder">
+📱 Scan to Pay
+</div>
+<canvas id="q" style="display:none;"></canvas>
+</div>
+</div>
+
+<div class="loading" id="loading">Generating QR Code...</div>
+
+<div class="success-message" id="successMessage">QR Code generated successfully!</div>
+
+<div class="error-message" id="errorMessage">Please enter a valid UPI ID</div>
+
+<div class="button-group">
+<button class="btn btn-primary" onclick="generateQR()">Generate QR</button>
+<button class="btn btn-secondary" onclick="downloadQR()">Download QR</button>
+<button class="btn btn-outline" onclick="shareQR()">Share QR</button>
+</div>
+
+</div>
+
+<script>
+
+// Global variables
+let currentQRData = null;
+
+// Navigation
+function goBack(){
+window.location = 'dashboard.html';
+}
+
+// Generate QR Code
+function generateQR(){
+const upi = document.getElementById('upi').value.trim();
+const amount = document.getElementById('amount').value;
+
+if(!upi){
+showError('Please enter a UPI ID');
+return;
+}
+
+// Validate UPI format
+if(!upi.includes('@') || upi.split('@').length !== 2){
+showError('Please enter a valid UPI ID (e.g., user@upi)');
+return;
+}
+
+hideMessages();
+showLoading(true);
+
+// Construct UPI URL
+let upiUrl = `upi://pay?pa=${upi}&pn=Payment&cu=INR`;
+
+if(amount && amount > 0){
+upiUrl += `&am=${amount}`;
+}
+
+try{
+QRCode.toCanvas(
+document.getElementById("q"),
+upiUrl,
+{
+width: 250,
+height: 250,
+color: {
+dark: '#000000',
+light: '#FFFFFF'
+}
+},
+function(error){
+if(error){
+console.error(error);
+showError('Failed to generate QR code');
+showLoading(false);
+return;
+}
+
+// Success
+document.getElementById('q').style.display = 'block';
+document.getElementById('qrPlaceholder').style.display = 'none';
+currentQRData = upiUrl;
+
+showLoading(false);
+showSuccess('QR Code generated successfully!');
+
+addQRAnimation();
+}
+);
+} catch(error){
+console.error(error);
+showError('Failed to generate QR code');
+showLoading(false);
+}
+}
+
+// Download QR Code
+function downloadQR(){
+if(!currentQRData){
+showError('Please generate a QR code first');
+return;
+}
+
+const canvas = document.getElementById('q');
+const link = document.createElement('a');
+link.download = 'qr-code.png';
+link.href = canvas.toDataURL();
+link.click();
+
+showSuccess('QR Code downloaded successfully!');
+}
+
+// Share QR Code
+function shareQR(){
+if(!currentQRData){
+showError('Please generate a QR code first');
+return;
+}
+
+const amount = document.getElementById('amount').value;
+const shareText = amount ?
+`Pay ₹${amount} using this QR code` :
+'Pay using this QR code';
+
+if(navigator.share){
+navigator.share({
+title: 'QR Payment',
+text: shareText,
+url: currentQRData
+}).catch(() => {
+copyToClipboard(currentQRData);
+showSuccess('QR data copied to clipboard!');
+});
+} else {
+copyToClipboard(currentQRData);
+showSuccess('QR data copied to clipboard!');
+}
+}
+
+// Utility functions
+function copyToClipboard(text){
+const textArea = document.createElement('textarea');
+textArea.value = text;
+document.body.appendChild(textArea);
+textArea.select();
+document.execCommand('copy');
+document.body.removeChild(textArea);
+}
+
+function showLoading(show){
+document.getElementById('loading').style.display = show ? 'block' : 'none';
+}
+
+function showSuccess(message){
+const successEl = document.getElementById('successMessage');
+successEl.textContent = message;
+successEl.style.display = 'block';
+setTimeout(() => {
+successEl.style.display = 'none';
+}, 3000);
+}
+
+function showError(message){
+const errorEl = document.getElementById('errorMessage');
+errorEl.textContent = message;
+errorEl.style.display = 'block';
+setTimeout(() => {
+errorEl.style.display = 'none';
+}, 3000);
+}
+
+function hideMessages(){
+document.getElementById('successMessage').style.display = 'none';
+document.getElementById('errorMessage').style.display = 'none';
+}
+
+function addQRAnimation(){
+const canvas = document.getElementById('q');
+canvas.style.animation = 'none';
+setTimeout(() => {
+canvas.style.animation = 'qrGenerated 0.5s ease';
+}, 10);
+}
+
+// Add CSS animation for QR generation
+const style = document.createElement('style');
+style.textContent = `
+@keyframes qrGenerated {
+0% { transform: scale(0.8); opacity: 0; }
+50% { transform: scale(1.1); }
+100% { transform: scale(1); opacity: 1; }
+}
+`;
+document.head.appendChild(style);
+
+// Keyboard shortcuts
+document.addEventListener('keydown', function(e){
+if(e.key === 'Enter' && e.ctrlKey){
+generateQR();
+} else if(e.key === 'Escape'){
+goBack();
+}
+});
+
+// Auto-focus on UPI input
+document.getElementById('upi').focus();
+
+</script>
+
+</body>
+
+</html>
+
+</body>
+
+</html>
